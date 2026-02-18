@@ -1,110 +1,106 @@
-local is_vim = vim.fn.has("nvim") ~= 1
-if is_vim then
-  require("nightfox.lib.vim")
-end
-
-local config = require("nightfox.config")
-
-local function read_file(filepath)
-  local file = io.open(filepath, "r")
-  if file then
-    local content = file:read()
-    file:close()
-    return content
-  end
-end
-
-local function write_file(filepath, content)
-  local file = io.open(filepath, "wb")
-  if file then
-    file:write(content)
-    file:close()
-  end
-end
-
+-- nightfox-minimal: a minimal nightfox/dayfox colorscheme plugin
 local M = {}
 
-function M.compile()
-  require("nightfox.lib.log").clear()
+local valid_themes = { nightfox = true, dayfox = true }
 
-  local compiler = require("nightfox.lib." .. (is_vim and "vim." or "") .. "compiler")
-  local foxes = require("nightfox.palette").foxes
-  for _, style in ipairs(foxes) do
-    compiler.compile({ style = style })
+-- Default config
+M.config = {
+  transparent = false,
+  terminal_colors = true,
+}
+
+function M.setup(opts)
+  if opts then
+    M.config = vim.tbl_deep_extend("force", M.config, opts)
   end
 end
 
-function M.reset()
-  require("nightfox.config").reset()
-  require("nightfox.override").reset()
-end
+function M.load(name)
+  name = name or "nightfox"
 
--- Avold g:colors_name reloading
-local lock = false
-local did_setup = false
-
-function M.load(opts)
-  if lock then
+  if not valid_themes[name] then
+    vim.notify("nightfox-minimal: unknown theme '" .. name .. "'. Use 'nightfox' or 'dayfox'.", vim.log.levels.ERROR)
     return
   end
 
-  if not did_setup then
-    M.setup()
+  local raw = require("nightfox.palette." .. name)
+  local palette = raw.palette
+  palette.meta = raw.meta
+
+  local spec = raw.generate_spec(palette)
+  spec.palette = palette
+
+  -- Clear existing highlights
+  if vim.g.colors_name then
+    vim.cmd("hi clear")
+  end
+  if vim.fn.exists("syntax_on") then
+    vim.cmd("syntax reset")
   end
 
-  opts = opts or {}
+  vim.o.termguicolors = true
+  vim.g.colors_name = name
+  vim.o.background = raw.meta.light and "light" or "dark"
 
-  local _, compiled_file = config.get_compiled_info(opts)
-  lock = true
+  local hl = require("nightfox.highlights")
+  hl.apply(spec, M.config)
 
-  local f = loadfile(compiled_file)
-  if not f then
-    M.compile()
-    f = loadfile(compiled_file)
+  if M.config.terminal_colors then
+    hl.apply_terminal(palette)
   end
-
-  ---@diagnostic disable-next-line: need-check-nil
-  f()
-
-  lock = false
 end
 
-function M.setup(opts)
-  did_setup = true
-  opts = opts or {}
+-- lualine theme generator
+function M.lualine(name)
+  name = name or vim.g.colors_name or "nightfox"
+  if not valid_themes[name] then return {} end
 
-  local override = require("nightfox.override")
+  local C = require("nightfox.color")
+  local raw = require("nightfox.palette." .. name)
+  local palette = raw.palette
+  palette.meta = raw.meta
+  local spec = raw.generate_spec(palette)
+  local p = palette
+  local base = C.from_hex(spec.bg0)
 
-  if opts.options then
-    config.set_options(opts.options)
+  local function fade(color, amount)
+    return C.to_hex(C.blend(base, C.from_hex(color), amount or 0.3))
   end
 
-  if opts.palettes then
-    override.palettes = opts.palettes
-  end
+  local tbg = M.config.transparent and "NONE" or spec.bg0
 
-  if opts.specs then
-    override.specs = opts.specs
-  end
-
-  if opts.groups then
-    override.groups = opts.groups
-  end
-
-  local util = require("nightfox.util")
-  util.ensure_dir(config.options.compile_path)
-
-  local cached_path = util.join_paths(config.options.compile_path, "cache")
-  local cached = read_file(cached_path)
-
-  local git_path = util.join_paths(debug.getinfo(1).source:sub(2, -23), ".git")
-  local git = vim.fn.getftime(git_path)
-  local hash = require("nightfox.lib.hash")(opts) .. (git == -1 and git_path or git)
-
-  if cached ~= hash then
-    M.compile()
-    write_file(cached_path, hash)
-  end
+  return {
+    normal = {
+      a = { bg = p.blue.base,    fg = spec.bg0, gui = "bold" },
+      b = { bg = fade(p.blue.base), fg = spec.fg1 },
+      c = { bg = tbg, fg = spec.fg2 },
+    },
+    insert = {
+      a = { bg = p.green.base,   fg = spec.bg0, gui = "bold" },
+      b = { bg = fade(p.green.base), fg = spec.fg1 },
+    },
+    command = {
+      a = { bg = p.yellow.base,  fg = spec.bg0, gui = "bold" },
+      b = { bg = fade(p.yellow.base), fg = spec.fg1 },
+    },
+    visual = {
+      a = { bg = p.magenta.base, fg = spec.bg0, gui = "bold" },
+      b = { bg = fade(p.magenta.base), fg = spec.fg1 },
+    },
+    replace = {
+      a = { bg = p.red.base,     fg = spec.bg0, gui = "bold" },
+      b = { bg = fade(p.red.base), fg = spec.fg1 },
+    },
+    terminal = {
+      a = { bg = p.orange.base,  fg = spec.bg0, gui = "bold" },
+      b = { bg = fade(p.orange.base), fg = spec.fg1 },
+    },
+    inactive = {
+      a = { bg = tbg, fg = p.blue.base },
+      b = { bg = tbg, fg = spec.fg3, gui = "bold" },
+      c = { bg = tbg, fg = spec.syntax.comment },
+    },
+  }
 end
 
 return M

@@ -1,81 +1,76 @@
-local C = require("nightfox.lib.color")
-local Shade = require("nightfox.lib.shade")
+local C = require("nightfox.color")
 
 local meta = {
   name = "dayfox",
   light = true,
 }
 
--- stylua: ignore
 local palette = {
-  black   = Shade.new("#352c24", 0.15, -0.15, true),
-  red     = Shade.new("#a5222f", 0.15, -0.15, true),
-  green   = Shade.new("#396847", 0.15, -0.15, true),
-  yellow  = Shade.new("#AC5402", 0.15, -0.15, true),
-  blue    = Shade.new("#2848a9", 0.15, -0.15, true),
-  magenta = Shade.new("#6e33ce", 0.15, -0.15, true),
-  cyan    = Shade.new("#287980", 0.15, -0.15, true),
-  white   = Shade.new("#f2e9e1", 0.15, -0.15, true),
-  orange  = Shade.new("#955f61", 0.15, -0.15, true),
-  pink    = Shade.new("#a440b5", 0.15, -0.15, true),
+  black   = C.make_shade("#352c24", 0.15, -0.15, true),
+  red     = C.make_shade("#a5222f", 0.15, -0.15, true),
+  green   = C.make_shade("#396847", 0.15, -0.15, true),
+  yellow  = C.make_shade("#AC5402", 0.15, -0.15, true),
+  blue    = C.make_shade("#2848a9", 0.15, -0.15, true),
+  magenta = C.make_shade("#6e33ce", 0.15, -0.15, true),
+  cyan    = C.make_shade("#287980", 0.15, -0.15, true),
+  white   = C.make_shade("#f2e9e1", 0.15, -0.15, true),
+  orange  = C.make_shade("#955f61", 0.15, -0.15, true),
+  pink    = C.make_shade("#a440b5", 0.15, -0.15, true),
 
   comment = "#837a72",
 
-  bg0     = "#e4dcd4", -- Dark bg (status line and float)
-  bg1     = "#f6f2ee", -- Default bg
-  bg2     = "#dbd1dd", -- Lighter bg (colorcolm folds)
-  bg3     = "#d3c7bb", -- Lighter bg (cursor line)
-  bg4     = "#aab0ad", -- Conceal, border fg
+  bg0  = "#e4dcd4",
+  bg1  = "#f6f2ee",
+  bg2  = "#dbd1dd",
+  bg3  = "#d3c7bb",
+  bg4  = "#aab0ad",
 
-  fg0     = "#302b5d", -- Lighter fg
-  fg1     = "#3d2b5a", -- Default fg
-  fg2     = "#643f61", -- Darker fg (status line)
-  fg3     = "#824d5b", -- Darker fg (line numbers, fold colums)
+  fg0  = "#302b5d",
+  fg1  = "#3d2b5a",
+  fg2  = "#643f61",
+  fg3  = "#824d5b",
 
-  sel0    = "#e7d2be", -- Popup bg, visual selection bg
-  sel1    = "#a4c1c2", -- Popup sel bg, search bg
+  sel0 = "#e7d2be",
+  sel1 = "#a4c1c2",
 }
 
 local function generate_spec(pal)
-  -- stylua: ignore start
   local spec = {
-    bg0  = pal.bg0,  -- Dark bg (status line and float)
-    bg1  = pal.bg1,  -- Default bg
-    bg2  = pal.bg2,  -- Lighter bg (colorcolm folds)
-    bg3  = pal.bg3,  -- Lighter bg (cursor line)
-    bg4  = pal.bg4,  -- Conceal, border fg
-
-    fg0  = pal.fg0,  -- Lighter fg
-    fg1  = pal.fg1,  -- Default fg
-    fg2  = pal.fg2,  -- Darker fg (status line)
-    fg3  = pal.fg3,  -- Darker fg (line numbers, fold colums)
-
-    sel0 = pal.sel0, -- Popup bg, visual selection bg
-    sel1 = pal.sel1, -- Popup sel bg, search bg
+    bg0  = pal.bg0,
+    bg1  = pal.bg1,
+    bg2  = pal.bg2,
+    bg3  = pal.bg3,
+    bg4  = pal.bg4,
+    fg0  = pal.fg0,
+    fg1  = pal.fg1,
+    fg2  = pal.fg2,
+    fg3  = pal.fg3,
+    sel0 = pal.sel0,
+    sel1 = pal.sel1,
   }
 
   spec.syntax = {
-    bracket     = spec.fg2,         -- Brackets and Punctuation
-    builtin0    = pal.red.base,     -- Builtin variable
-    builtin1    = pal.cyan.dim,     -- Builtin type
-    builtin2    = pal.orange.dim,   -- Builtin const
-    builtin3    = pal.red.dim,      -- Not used
-    comment     = pal.comment,      -- Comment
-    conditional = pal.magenta.dim,  -- Conditional and loop
-    const       = pal.orange.dim,   -- Constants, imports and booleans
-    dep         = spec.fg3,         -- Deprecated
-    field       = pal.blue.base,    -- Field
-    func        = pal.blue.dim,     -- Functions and Titles
-    ident       = pal.cyan.base,    -- Identifiers
-    keyword     = pal.magenta.base, -- Keywords
-    number      = pal.orange.base,  -- Numbers
-    operator    = spec.fg2,         -- Operators
-    preproc     = pal.pink.dim,     -- PreProc
-    regex       = pal.yellow.dim,   -- Regex
-    statement   = pal.magenta.base, -- Statements
-    string      = pal.green.base,   -- Strings
-    type        = pal.yellow.base,  -- Types
-    variable    = pal.black.base,   -- Variables
+    bracket     = spec.fg2,
+    builtin0    = pal.red.base,
+    builtin1    = pal.cyan.dim,
+    builtin2    = pal.orange.dim,
+    builtin3    = pal.red.dim,
+    comment     = pal.comment,
+    conditional = pal.magenta.dim,
+    const       = pal.orange.dim,
+    dep         = spec.fg3,
+    field       = pal.blue.base,
+    func        = pal.blue.dim,
+    ident       = pal.cyan.base,
+    keyword     = pal.magenta.base,
+    number      = pal.orange.base,
+    operator    = spec.fg2,
+    preproc     = pal.pink.dim,
+    regex       = pal.yellow.dim,
+    statement   = pal.magenta.base,
+    string      = pal.green.base,
+    type        = pal.yellow.base,
+    variable    = pal.black.base,
   }
 
   spec.diag = {
@@ -87,18 +82,18 @@ local function generate_spec(pal)
   }
 
   spec.diag_bg = {
-    error = C(spec.bg1):blend(C(spec.diag.error), 0.3):to_css(),
-    warn  = C(spec.bg1):blend(C(spec.diag.warn), 0.3):to_css(),
-    info  = C(spec.bg1):blend(C(spec.diag.info), 0.3):to_css(),
-    hint  = C(spec.bg1):blend(C(spec.diag.hint), 0.3):to_css(),
-    ok    = C(spec.bg1):blend(C(spec.diag.ok), 0.3):to_css(),
+    error = C.blend_hex(spec.bg1, spec.diag.error, 0.3),
+    warn  = C.blend_hex(spec.bg1, spec.diag.warn,  0.3),
+    info  = C.blend_hex(spec.bg1, spec.diag.info,  0.3),
+    hint  = C.blend_hex(spec.bg1, spec.diag.hint,  0.3),
+    ok    = C.blend_hex(spec.bg1, spec.diag.ok,    0.3),
   }
 
   spec.diff = {
-    add    = C(spec.bg1):blend(C(pal.green.base), 0.2):to_css(),
-    delete = C(spec.bg1):blend(C(pal.red.base), 0.2):to_css(),
-    change = C(spec.bg1):blend(C(pal.blue.base), 0.2):to_css(),
-    text   = C(spec.bg1):blend(C(pal.blue.base), 0.4):to_css(),
+    add    = C.blend_hex(spec.bg1, pal.green.base, 0.2),
+    delete = C.blend_hex(spec.bg1, pal.red.base,   0.2),
+    change = C.blend_hex(spec.bg1, pal.blue.base,  0.2),
+    text   = C.blend_hex(spec.bg1, pal.blue.base,  0.4),
   }
 
   spec.git = {
@@ -108,8 +103,6 @@ local function generate_spec(pal)
     conflict = pal.orange.base,
     ignored  = pal.comment,
   }
-
-  -- stylua: ignore start
 
   return spec
 end
