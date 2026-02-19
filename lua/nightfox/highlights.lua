@@ -28,6 +28,7 @@ function M.apply(spec, config)
 	hi("CursorLine", { bg = spec.bg3 })
 	link("CursorColumn", "CursorLine")
 	hi("CursorLineNr", { fg = spec.diag.warn, bold = true })
+	hi("CursorLineNrNC", { fg = spec.fg3, bold = true })
 	hi("Directory", { fg = syn.func })
 	hi("DiffAdd", { bg = spec.diff.add })
 	hi("DiffChange", { bg = spec.diff.change })
@@ -266,6 +267,20 @@ function M.apply(spec, config)
 	link("WhichKeySeparator", "Comment")
 	link("WhichKeyFloat", "NormalFloat")
 	link("WhichKeyValue", "Comment")
+
+	local group = vim.api.nvim_create_augroup("NightfoxCursorLineNr", { clear = true })
+	vim.api.nvim_create_autocmd({ "WinLeave", "FocusLost" }, {
+		group = group,
+		callback = function()
+			vim.wo.winhighlight = "CursorLineNr:CursorLineNrNC"
+		end,
+	})
+	vim.api.nvim_create_autocmd({ "WinEnter", "FocusGained", "BufEnter" }, {
+		group = group,
+		callback = function()
+			vim.wo.winhighlight = ""
+		end,
+	})
 end
 
 function M.apply_terminal(palette)
@@ -289,67 +304,68 @@ function M.apply_terminal(palette)
 end
 
 function M.apply_dim_inactive(spec, factor)
-    local C = require("nightfox.color")
+	local C = require("nightfox.color")
 
-    -- Create dimmed versions of all main syntax colors by blending toward bg
-    local function dim(hex)
-        return C.blend_hex(hex, spec.bg1, factor)
-    end
+	-- Create dimmed versions of all main syntax colors by blending toward bg
+	local function dim(hex)
+		return C.blend_hex(hex, spec.bg1, factor)
+	end
 
-    local syn = spec.syntax
-    local groups = {
-        NormalNCDim        = { fg = dim(spec.fg1), bg = C.blend_hex(spec.bg1, spec.bg0, 0.7) },
-        CommentDim         = { fg = dim(syn.comment), italic = true },
-        ConstantDim        = { fg = dim(syn.const) },
-        StringDim          = { fg = dim(syn.string) },
-        NumberDim          = { fg = dim(syn.number) },
-        IdentifierDim      = { fg = dim(syn.ident) },
-        FunctionDim        = { fg = dim(syn.func) },
-        KeywordDim         = { fg = dim(syn.keyword) },
-        TypeDim            = { fg = dim(syn.type) },
-        StatementDim       = { fg = dim(syn.keyword) },
-        PreProcDim         = { fg = dim(syn.preproc) },
-        OperatorDim        = { fg = dim(syn.operator) },
-        SpecialDim         = { fg = dim(syn.func) },
-    }
+	local syn = spec.syntax
+	local groups = {
+		NormalNCDim = { fg = dim(spec.fg1), bg = C.blend_hex(spec.bg1, spec.bg0, 0.7) },
+		CommentDim = { fg = dim(syn.comment), italic = true },
+		ConstantDim = { fg = dim(syn.const) },
+		StringDim = { fg = dim(syn.string) },
+		NumberDim = { fg = dim(syn.number) },
+		IdentifierDim = { fg = dim(syn.ident) },
+		FunctionDim = { fg = dim(syn.func) },
+		KeywordDim = { fg = dim(syn.keyword) },
+		TypeDim = { fg = dim(syn.type) },
+		StatementDim = { fg = dim(syn.keyword) },
+		PreProcDim = { fg = dim(syn.preproc) },
+		OperatorDim = { fg = dim(syn.operator) },
+		SpecialDim = { fg = dim(syn.func) },
+	}
 
-    for name, opts in pairs(groups) do
-        vim.api.nvim_set_hl(0, name, opts)
-    end
+	for name, opts in pairs(groups) do
+		vim.api.nvim_set_hl(0, name, opts)
+	end
 
-    -- remaps/dim active groups
-    local winhighlight = table.concat({
-        "Normal:NormalNCDim",
-        "Comment:CommentDim",
-        "Constant:ConstantDim",
-        "String:StringDim",
-        "Number:NumberDim",
-        "Identifier:IdentifierDim",
-        "Function:FunctionDim",
-        "Keyword:KeywordDim",
-        "Type:TypeDim",
-        "Statement:StatementDim",
-        "PreProc:PreProcDim",
-        "Operator:OperatorDim",
-        "Special:SpecialDim",
-    }, ",")
+	-- remaps/dim active groups
+	local winhighlight = table.concat({
+		"Normal:NormalNCDim",
+		"CursorLineNr:CursorLineNrNC",
+		"Comment:CommentDim",
+		"Constant:ConstantDim",
+		"String:StringDim",
+		"Number:NumberDim",
+		"Identifier:IdentifierDim",
+		"Function:FunctionDim",
+		"Keyword:KeywordDim",
+		"Type:TypeDim",
+		"Statement:StatementDim",
+		"PreProc:PreProcDim",
+		"Operator:OperatorDim",
+		"Special:SpecialDim",
+	}, ",")
 
-    -- apply/remove winhighlight on focus change
-    local group = vim.api.nvim_create_augroup("NightfoxDimInactive", { clear = true })
+	-- apply/remove winhighlight on focus change
+	local group = vim.api.nvim_create_augroup("NightfoxDimInactive", { clear = true })
 
-    vim.api.nvim_create_autocmd({ "WinLeave", "FocusLost" }, {
-        group = group,
-        callback = function()
-            vim.wo.winhighlight = winhighlight
-        end,
-    })
+	vim.api.nvim_create_autocmd({ "WinLeave", "FocusLost" }, {
+		group = group,
+		callback = function()
+			vim.wo.winhighlight = winhighlight
+		end,
+	})
 
-    vim.api.nvim_create_autocmd({ "WinEnter", "FocusGained", "BufEnter" }, {
-        group = group,
-        callback = function()
-            vim.wo.winhighlight = ""
-        end,
-    })
+	vim.api.nvim_create_autocmd({ "WinEnter", "FocusGained", "BufEnter" }, {
+		group = group,
+		callback = function()
+			vim.wo.winhighlight = ""
+		end,
+	})
 end
 
 return M
