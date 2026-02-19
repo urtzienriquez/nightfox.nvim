@@ -47,10 +47,10 @@ function M.apply(spec, config)
 	hi("MoreMsg", { fg = spec.diag.info, bold = true })
 	hi("NonText", { fg = spec.bg4 })
 	link("SpecialKey", "NonText")
-	hi("Pmenu", { fg = spec.fg1, bg = spec.sel0 })
+	hi("Pmenu", { bg = spec.bg2 })
 	hi("PmenuSel", { bg = spec.sel1 })
-	link("PmenuSbar", "Pmenu")
-	hi("PmenuThumb", { bg = spec.sel1 })
+	hi("PmenuSbar", { bg = spec.bg2 })
+	hi("PmenuThumb", { bg = spec.bg3 })
 	link("Question", "MoreMsg")
 	link("QuickFixLine", "CursorLine")
 	hi("Search", { fg = spec.fg1, bg = spec.sel1 })
@@ -243,6 +243,14 @@ function M.apply(spec, config)
 	link("CmpItemKindOperator", "Operator")
 	link("CmpItemMenu", "Comment")
 
+	-- blink.cmp / Pmenu
+	hi("CmpPmenu", { bg = spec.bg2, fg = spec.fg2 })
+	hi("CmpSel", { bg = spec.sel1, fg = spec.fg1, bold = true })
+	hi("CmpDoc", { bg = spec.bg2, fg = spec.fg2 })
+	hi("CmpSignatureHelp", { bg = spec.bg2, fg = spec.fg2 })
+	hi("BlinkCmpDocSeparator", { bg = spec.bg2, fg = spec.palette.blue.base })
+	hi("BlinkCmpLabelMatch", { fg = spec.palette.blue.bright, bold = true })
+
 	-- which-key
 	link("WhichKey", "Identifier")
 	link("WhichKeyGroup", "Function")
@@ -250,7 +258,6 @@ function M.apply(spec, config)
 	link("WhichKeySeparator", "Comment")
 	link("WhichKeyFloat", "NormalFloat")
 	link("WhichKeyValue", "Comment")
-
 end
 
 function M.apply_terminal(palette)

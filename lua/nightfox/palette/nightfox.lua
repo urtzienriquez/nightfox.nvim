@@ -5,8 +5,6 @@ local meta = {
   light = false,
 }
 
-local bg = C.from_hex("#192330")
-
 local palette = {
   black   = C.make_shade("#393b44", 0.15, -0.15),
   red     = C.make_shade("#c94f6d", 0.15, -0.15),
