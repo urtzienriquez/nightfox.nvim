@@ -7,6 +7,7 @@ local valid_themes = { nightfox = true, dayfox = true }
 M.config = {
 	transparent = false,
 	terminal_colors = true,
+	dim_inactive = false,
 }
 
 function M.setup(opts)
@@ -54,6 +55,11 @@ function M.load(name)
 
 	if M.config.terminal_colors then
 		hl.apply_terminal(palette)
+	end
+
+	if M.config.dim_inactive then
+		local factor = type(M.config.dim_inactive) == "number" and M.config.dim_inactive or 0.4
+		hl.apply_dim_inactive(spec, factor)
 	end
 end
 
