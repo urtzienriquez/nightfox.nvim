@@ -307,7 +307,6 @@ end
 function M.apply_dim_inactive(spec, factor)
 	local C = require("nightfox.color")
 
-	-- Create dimmed versions of all main syntax colors by blending toward bg
 	local function dim(hex)
 		return C.blend_hex(hex, spec.bg1, factor)
 	end
@@ -333,7 +332,6 @@ function M.apply_dim_inactive(spec, factor)
 		vim.api.nvim_set_hl(0, name, opts)
 	end
 
-	-- remaps/dim active groups
 	local winhighlight = table.concat({
 		"Normal:NormalNCDim",
 		"CursorLineNr:CursorLineNrNC",
@@ -351,7 +349,6 @@ function M.apply_dim_inactive(spec, factor)
 		"Special:SpecialDim",
 	}, ",")
 
-	-- apply/remove winhighlight on focus change
 	local group = vim.api.nvim_create_augroup("NightfoxDimInactive", { clear = true })
 
 	vim.api.nvim_create_autocmd({ "WinLeave", "FocusLost" }, {
@@ -367,6 +364,125 @@ function M.apply_dim_inactive(spec, factor)
 			vim.wo.winhighlight = ""
 		end,
 	})
+end
+
+-- ---------------------------------------------------------------------------
+-- Fenced code block background highlighting
+--
+-- Uses extmarks with line_hl_group, which paints the entire line (col 0 to
+-- EOL) identically to CursorLine. This is necessary because treesitter
+-- highlights only cover actual character cells, leaving gaps on empty lines
+-- and before indented fences.
+--
+-- Fences are matched by char (` or ~) and count (3+), so a ````markdown block
+-- is only closed by ```` or more bare backticks, not by ```.
+-- ---------------------------------------------------------------------------
+
+local NS = vim.api.nvim_create_namespace("nightfox_code_blocks")
+
+local ENABLED_FT = {
+	markdown = true,
+	rmd      = true,
+	quarto   = true,
+	pandoc   = true,
+}
+
+-- Returns (char, count) if the line is a fence opener, else nil.
+-- Matches lines that start (after optional whitespace) with 3+ backticks or
+-- tildes. Anything may follow (lang tag, options block, etc.).
+local function get_open_fence(line)
+	local backticks = line:match("^%s*(`+)")
+	if backticks and #backticks >= 3 then
+		return "`", #backticks
+	end
+	local tildes = line:match("^%s*(~+)")
+	if tildes and #tildes >= 3 then
+		return "~", #tildes
+	end
+	return nil
+end
+
+-- Returns true if line is a bare closing fence matching char/count.
+local function is_close_fence(line, char, count)
+	local found = line:match("^%s*(" .. vim.pesc(char) .. "+)%s*$")
+	return found ~= nil and #found >= count
+end
+
+local function redraw_code_blocks(bufnr)
+	if not vim.api.nvim_buf_is_valid(bufnr) then return end
+	local ft = vim.bo[bufnr].filetype
+	local base_ft = ft:match("^([^%.]+)") or ft
+	if not ENABLED_FT[base_ft] and not ENABLED_FT[ft] then return end
+
+	vim.api.nvim_buf_clear_namespace(bufnr, NS, 0, -1)
+
+	local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+	local inside = false
+	local fence_char, fence_count, fence_start
+
+	for i, line in ipairs(lines) do
+		if not inside then
+			local char, count = get_open_fence(line)
+			if char then
+				inside = true
+				fence_char = char
+				fence_count = count
+				fence_start = i - 1 -- 0-indexed
+			end
+		elseif is_close_fence(line, fence_char, fence_count) then
+			for row = fence_start, i - 1 do
+				vim.api.nvim_buf_set_extmark(bufnr, NS, row, 0, {
+					line_hl_group = "NightfoxCodeBlock",
+					priority = 90,
+				})
+			end
+			inside = false
+			fence_char = nil
+			fence_count = nil
+			fence_start = nil
+		end
+	end
+end
+
+function M.apply_code_blocks(spec)
+	hi("NightfoxCodeBlock", { bg = spec.bg2 })
+
+	-- Legacy/plugin syntax groups for when those syntax files are active.
+	-- These are whole-line regions so they also get the correct full-line bg.
+	hi("RCodeBlock",           { bg = spec.bg2 })
+	hi("CodeBlock",            { bg = spec.bg2 })
+	vim.cmd("silent! hi! link rmdChunk NightfoxCodeBlock")
+	hi("mkdCode",              { bg = spec.bg2 })
+	hi("mkdCodeStart",         { bg = spec.bg2 })
+	hi("mkdCodeEnd",           { bg = spec.bg2 })
+	hi("pandocCodeBlock",      { bg = spec.bg2 })
+	hi("pandocCodeBlockDelim", { bg = spec.bg2 })
+	hi("OtterBackground",      { bg = spec.bg2 })
+
+	-- Treesitter @markup.raw.block: paints character cells inside blocks so
+	-- injected-language tokens inherit the bg correctly.
+	-- @markup.raw.markdown_inline is intentionally left unset — we do not
+	-- want any background on inline code spans.
+	hi("@markup.raw.block", { bg = spec.bg2 })
+
+	local group = vim.api.nvim_create_augroup("NightfoxCodeBlocks", { clear = true })
+
+	vim.api.nvim_create_autocmd({ "BufEnter", "BufWritePost", "TextChanged", "TextChangedI" }, {
+		group = group,
+		callback = function(ev)
+			vim.schedule(function()
+				redraw_code_blocks(ev.buf)
+			end)
+		end,
+	})
+
+	for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
+		if vim.api.nvim_buf_is_loaded(bufnr) then
+			vim.schedule(function()
+				redraw_code_blocks(bufnr)
+			end)
+		end
+	end
 end
 
 return M

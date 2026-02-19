@@ -8,6 +8,7 @@ M.config = {
 	transparent = false,
 	terminal_colors = true,
 	dim_inactive = false,
+	code_block_bg = true, -- full-line bg tint on fenced code blocks
 }
 
 function M.setup(opts)
@@ -60,6 +61,10 @@ function M.load(name)
 	if M.config.dim_inactive then
 		local factor = type(M.config.dim_inactive) == "number" and M.config.dim_inactive or 0.4
 		hl.apply_dim_inactive(spec, factor)
+	end
+
+	if M.config.code_block_bg ~= false then
+		hl.apply_code_blocks(spec)
 	end
 end
 
