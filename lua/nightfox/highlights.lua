@@ -9,42 +9,6 @@ local function link(name, target)
 	vim.api.nvim_set_hl(0, name, { link = target })
 end
 
--- Helper to resolve "palette.color.shade" or "spec.group.color" strings
-local function resolve_color(color, spec)
-	if type(color) ~= "string" then
-		return color
-	end
-
-	-- If it's a hex code or special keyword, return it directly
-	if color:match("^#") or color == "NONE" or color == "none" then
-		return color
-	end
-
-	-- Split the string (e.g., "palette.blue.base")
-	local parts = {}
-	for part in string.gmatch(color, "[^%.]+") do
-		table.insert(parts, part)
-	end
-
-	local current = spec
-	if parts[1] == "palette" then
-		-- Access the raw palette if it's attached to the spec
-		current = spec.palette or {}
-		table.remove(parts, 1)
-	elseif parts[1] == "spec" then
-		table.remove(parts, 1)
-	end
-
-	for _, part in ipairs(parts) do
-		if current and current[part] then
-			current = current[part]
-		else
-			return nil
-		end
-	end
-	return type(current) == "string" and current or nil
-end
-
 function M.apply(spec, config)
 	local syn = spec.syntax
 	local trans = config and config.transparent or false
@@ -52,8 +16,8 @@ function M.apply(spec, config)
 
 	-- Editor
 	hi("Normal", { fg = spec.fg1, bg = bg1 })
-	hi("NormalNC", { fg = spec.fg1, bg = trans and "NONE" or spec.bg0 })
-	hi("NormalFloat", { fg = spec.fg1, bg = spec.bg0 })
+	hi("NormalNC", { fg = spec.fg1, bg = trans and "NONE" or spec.bg1 })
+	hi("NormalFloat", { fg = spec.fg1, bg = spec.bg1 })
 	hi("FloatBorder", { fg = spec.fg3 })
 	hi("ColorColumn", { bg = spec.bg2 })
 	hi("Conceal", { fg = spec.bg4 })
@@ -287,27 +251,6 @@ function M.apply(spec, config)
 	link("WhichKeyFloat", "NormalFloat")
 	link("WhichKeyValue", "Comment")
 
-	-- User Configuration Overrides
-	if config and config.groups and config.groups.all then
-		for group, settings in pairs(config.groups.all) do
-			local new_settings = {}
-			for key, value in pairs(settings) do
-				if key == "fg" or key == "bg" or key == "sp" then
-					new_settings[key] = resolve_color(value, spec) or value
-				elseif key == "style" then
-					-- Translate "style = 'bold'" to "bold = true"
-					if type(value) == "string" then
-						for s in string.gmatch(value, "([^,]+)") do
-							new_settings[s] = true
-						end
-					end
-				else
-					new_settings[key] = value
-				end
-			end
-			hi(group, new_settings)
-		end
-	end
 end
 
 function M.apply_terminal(palette)
