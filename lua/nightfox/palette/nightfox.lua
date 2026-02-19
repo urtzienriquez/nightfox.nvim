@@ -51,6 +51,7 @@ local function generate_spec(pal)
 
   spec.syntax = {
     bracket     = spec.fg2,
+    -- builtin0    = pal.red.base,
     builtin0    = pal.blue.base,
     builtin1    = pal.cyan.bright,
     builtin2    = pal.orange.bright,
