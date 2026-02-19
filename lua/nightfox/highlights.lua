@@ -163,9 +163,9 @@ function M.apply(spec, config)
 
 	-- Treesitter
 	link("@variable", "Identifier")
-	hi("@variable.builtin", { fg = syn.builtin0 })
-	hi("@variable.parameter", { fg = syn.builtin1 })
-	hi("@variable.member", { fg = syn.field })
+	link("@variable.builtin", "@variable")
+	link("@variable.parameter", "@variable")
+	link("@variable.member", "@variable")
 	link("@constant", "Constant")
 	hi("@constant.builtin", { fg = syn.builtin2 })
 	link("@constant.macro", "Macro")
