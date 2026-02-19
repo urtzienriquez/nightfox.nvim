@@ -1,3 +1,4 @@
+-- a test commit
 -- Applies all highlight groups for a given spec
 local M = {}
 
