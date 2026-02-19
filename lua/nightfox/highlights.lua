@@ -226,6 +226,14 @@ function M.apply(spec, config)
 	link("TelescopeSelection", "CursorLine")
 	link("TelescopeMatching", "Search")
 
+	-- fzf-lua
+	hi("FzfLuaNormal", { fg = spec.fg1, bg = spec.bg1 })
+	hi("FzfLuaBorder", { fg = spec.bg4, bg = spec.bg1 })
+	hi("FzfLuaTitle", { fg = spec.palette.orange.base, bg = spec.bg1, bold = true })
+	link("FzfLuaPreviewNormal", "FzfLuaNormal")
+	link("FzfLuaPreviewBorder", "FzfLuaBorder")
+	link("FzfLuaPreviewTitle", "FzfLuaTitle")
+
 	-- nvim-cmp
 	hi("CmpDocumentation", { fg = spec.fg1, bg = spec.bg0 })
 	hi("CmpDocumentationBorder", { fg = spec.sel0, bg = spec.bg0 })
