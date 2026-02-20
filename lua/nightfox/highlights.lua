@@ -261,6 +261,20 @@ function M.apply(spec, config)
 	hi("BlinkCmpDocSeparator", { bg = spec.bg2, fg = spec.palette.blue.base })
 	hi("BlinkCmpLabelMatch", { fg = spec.palette.blue.bright, bold = true })
 
+	-- oil.nvim confirmation window
+	hi("OilPreviewNormal", { fg = spec.fg0, bg = spec.bg0 })
+	local oil_group = vim.api.nvim_create_augroup("NightfoxOilPreview", { clear = true })
+	vim.api.nvim_create_autocmd("FileType", {
+		group = oil_group,
+		pattern = "oil_preview",
+		callback = function()
+			local win = vim.api.nvim_get_current_win()
+			vim.schedule(function()
+				vim.wo[win].winhighlight = "Normal:OilPreviewNormal"
+			end)
+		end,
+	})
+
 	-- which-key
 	link("WhichKey", "Identifier")
 	link("WhichKeyGroup", "Function")
@@ -382,9 +396,9 @@ local NS = vim.api.nvim_create_namespace("nightfox_code_blocks")
 
 local ENABLED_FT = {
 	markdown = true,
-	rmd      = true,
-	quarto   = true,
-	pandoc   = true,
+	rmd = true,
+	quarto = true,
+	pandoc = true,
 }
 
 -- Returns (char, count) if the line is a fence opener, else nil.
@@ -409,10 +423,14 @@ local function is_close_fence(line, char, count)
 end
 
 local function redraw_code_blocks(bufnr)
-	if not vim.api.nvim_buf_is_valid(bufnr) then return end
+	if not vim.api.nvim_buf_is_valid(bufnr) then
+		return
+	end
 	local ft = vim.bo[bufnr].filetype
 	local base_ft = ft:match("^([^%.]+)") or ft
-	if not ENABLED_FT[base_ft] and not ENABLED_FT[ft] then return end
+	if not ENABLED_FT[base_ft] and not ENABLED_FT[ft] then
+		return
+	end
 
 	vim.api.nvim_buf_clear_namespace(bufnr, NS, 0, -1)
 
@@ -449,15 +467,15 @@ function M.apply_code_blocks(spec)
 
 	-- Legacy/plugin syntax groups for when those syntax files are active.
 	-- These are whole-line regions so they also get the correct full-line bg.
-	hi("RCodeBlock",           { bg = spec.bg2 })
-	hi("CodeBlock",            { bg = spec.bg2 })
+	hi("RCodeBlock", { bg = spec.bg2 })
+	hi("CodeBlock", { bg = spec.bg2 })
 	vim.cmd("silent! hi! link rmdChunk NightfoxCodeBlock")
-	hi("mkdCode",              { bg = spec.bg2 })
-	hi("mkdCodeStart",         { bg = spec.bg2 })
-	hi("mkdCodeEnd",           { bg = spec.bg2 })
-	hi("pandocCodeBlock",      { bg = spec.bg2 })
+	hi("mkdCode", { bg = spec.bg2 })
+	hi("mkdCodeStart", { bg = spec.bg2 })
+	hi("mkdCodeEnd", { bg = spec.bg2 })
+	hi("pandocCodeBlock", { bg = spec.bg2 })
 	hi("pandocCodeBlockDelim", { bg = spec.bg2 })
-	hi("OtterBackground",      { bg = spec.bg2 })
+	hi("OtterBackground", { bg = spec.bg2 })
 
 	-- Treesitter @markup.raw.block: paints character cells inside blocks so
 	-- injected-language tokens inherit the bg correctly.
