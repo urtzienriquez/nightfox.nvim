@@ -74,11 +74,13 @@ function M.apply(spec, config)
 	link("WildMenu", "Pmenu")
 	hi("WinBar", { fg = spec.fg3, bg = bg1, bold = true })
 	hi("WinBarNC", { fg = spec.fg3, bg = bg1, bold = true })
-	hi("MsgNotificationArea", { fg = spec.fg3, bg = spec.bg0 })
+	hi("MsgNotificationArea", { fg = spec.fg3, bg = "NONE" })
+	hi("MsgBorder", { fg = syn.func, bg = "NONE" })
 	vim.api.nvim_create_autocmd("FileType", {
 		pattern = { "msg" },
 		callback = function()
-			vim.api.nvim_set_option_value("winhl", "Normal:MsgNotificationArea", {})
+			local win = vim.api.nvim_get_current_win()
+			vim.wo[win].winhighlight = "NormalFloat:MsgNotificationArea,FloatBorder:MsgBorder"
 		end,
 	})
 
