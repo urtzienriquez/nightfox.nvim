@@ -74,6 +74,13 @@ function M.apply(spec, config)
 	link("WildMenu", "Pmenu")
 	hi("WinBar", { fg = spec.fg3, bg = bg1, bold = true })
 	hi("WinBarNC", { fg = spec.fg3, bg = bg1, bold = true })
+	hi("MsgNotificationArea", { fg = syn.builtin2, bg = spec.bg0 })
+	vim.api.nvim_create_autocmd("FileType", {
+		pattern = { "msg" },
+		callback = function()
+			vim.api.nvim_set_option_value("winhl", "Normal:MsgNotificationArea", {})
+		end,
+	})
 
 	-- Syntax
 	hi("Comment", { fg = syn.comment, italic = true })
