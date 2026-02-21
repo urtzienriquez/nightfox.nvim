@@ -9,6 +9,7 @@ M.config = {
 	terminal_colors = true,
 	dim_inactive = false,
 	code_block_bg = true, -- full-line bg tint on fenced code blocks
+	statusline = true,    -- set to false to disable the built-in statusline
 }
 
 function M.setup(opts)
@@ -65,6 +66,10 @@ function M.load(name)
 
 	if M.config.code_block_bg ~= false then
 		hl.apply_code_blocks(spec)
+	end
+
+	if M.config.statusline ~= false then
+		require("nightfox.statusline").apply(spec)
 	end
 end
 
