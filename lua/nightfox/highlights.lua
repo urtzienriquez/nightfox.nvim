@@ -270,20 +270,6 @@ function M.apply(spec, config)
 	hi("BlinkCmpDocSeparator", { bg = spec.bg2, fg = spec.palette.blue.base })
 	hi("BlinkCmpLabelMatch", { fg = spec.palette.blue.bright, bold = true })
 
-	-- oil.nvim confirmation window
-	hi("OilPreviewNormal", { fg = spec.fg0, bg = spec.bg0 })
-	local oil_group = vim.api.nvim_create_augroup("NightfoxOilPreview", { clear = true })
-	vim.api.nvim_create_autocmd("FileType", {
-		group = oil_group,
-		pattern = "oil_preview",
-		callback = function()
-			local win = vim.api.nvim_get_current_win()
-			vim.schedule(function()
-				vim.wo[win].winhighlight = "Normal:OilPreviewNormal"
-			end)
-		end,
-	})
-
 	-- which-key
 	link("WhichKey", "Identifier")
 	link("WhichKeyGroup", "Function")
