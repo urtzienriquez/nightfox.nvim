@@ -1,13 +1,13 @@
 # nightfox.nvim
 
-***WORK IN PROGRESS***
+My fork of EdenEast's nightfox.nvim [link](https://github.com/EdenEast/nightfox.nvim). Check his repo for a more flexible and feature rich foxy theme :).
 
-A minimal Lua-only Neovim colorscheme plugin with two themes:
+This is just a minimal Lua-only Neovim colorscheme plugin with two themes:
 
 - **nightfox** — dark
 - **dayfox** — light
 
-Forked and stripped down from [nightfox.nvim](https://github.com/EdenEast/nightfox.nvim) — no compilation step, no extra foxes, no Vim compatibility layer.
+No compilation step, no extra foxes, no Vim compatibility layer.
 
 ---
 
