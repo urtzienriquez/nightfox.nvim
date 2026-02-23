@@ -238,12 +238,16 @@ function M.apply(spec, config)
 	link("TelescopeMatching", "Search")
 
 	-- fzf-lua
-	hi("FzfLuaNormal", { fg = spec.bg4, bg = spec.bg1 })
+	hi("FzfLuaNormal", { fg = spec.fg1, bg = spec.bg1 })
 	hi("FzfLuaBorder", { fg = spec.bg4, bg = spec.bg1 })
 	hi("FzfLuaTitle", { fg = spec.fg3, bg = spec.bg1, bold = true })
 	link("FzfLuaPreviewNormal", "FzfLuaNormal")
 	link("FzfLuaPreviewBorder", "FzfLuaBorder")
 	link("FzfLuaPreviewTitle", "FzfLuaTitle")
+
+	-- Snacks picker
+	hi("SnacksPickerTitle", { fg = spec.fg3, bg = spec.bg1, bold = true })
+	link("SnacksTitle", "SnacksPickerTitle")
 
 	-- nvim-cmp
 	hi("CmpDocumentation", { fg = spec.fg1, bg = spec.bg0 })
