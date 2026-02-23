@@ -233,14 +233,14 @@ function M.apply(spec, config)
 
 	-- Telescope
 	hi("TelescopeBorder", { fg = spec.bg4 })
-	hi("TelescopeSelectionCaret", { fg = spec.diag.hint })
+	hi("TelescopeSelectionCaret", { fg = spec.palette.orange.base })
 	link("TelescopeSelection", "CursorLine")
 	link("TelescopeMatching", "Search")
 
 	-- fzf-lua
-	hi("FzfLuaNormal", { fg = spec.fg1, bg = spec.bg1 })
+	hi("FzfLuaNormal", { fg = spec.bg4, bg = spec.bg1 })
 	hi("FzfLuaBorder", { fg = spec.bg4, bg = spec.bg1 })
-	hi("FzfLuaTitle", { fg = spec.palette.orange.base, bg = spec.bg1, bold = true })
+	hi("FzfLuaTitle", { fg = spec.fg3, bg = spec.bg1, bold = true })
 	link("FzfLuaPreviewNormal", "FzfLuaNormal")
 	link("FzfLuaPreviewBorder", "FzfLuaBorder")
 	link("FzfLuaPreviewTitle", "FzfLuaTitle")
