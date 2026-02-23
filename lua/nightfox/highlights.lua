@@ -484,14 +484,19 @@ function M.apply_code_blocks(spec)
 
 	local group = vim.api.nvim_create_augroup("NightfoxCodeBlocks", { clear = true })
 
-	vim.api.nvim_create_autocmd({ "BufEnter", "BufWritePost", "TextChanged", "TextChangedI" }, {
-		group = group,
-		callback = function(ev)
-			vim.schedule(function()
-				redraw_code_blocks(ev.buf)
-			end)
-		end,
-	})
+	vim.api.nvim_create_autocmd(
+		{ "BufEnter", "BufWritePost", "TextChanged", "TextChangedI", "BufWinEnter", "CursorMoved" },
+		{
+			group = group,
+			callback = function(ev)
+				vim.schedule(function()
+					vim.schedule(function()
+						redraw_code_blocks(ev.buf)
+					end)
+				end)
+			end,
+		}
+	)
 
 	for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
 		if vim.api.nvim_buf_is_loaded(bufnr) then
