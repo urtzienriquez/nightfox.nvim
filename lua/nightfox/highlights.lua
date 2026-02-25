@@ -239,7 +239,7 @@ function M.apply(spec, config)
 
 	-- fzf-lua
 	hi("FzfLuaNormal", { fg = spec.fg1, bg = spec.bg1 })
-	hi("FzfLuaBorder", { fg = spec.bg4, bg = spec.bg1 })
+	hi("FzfLuaBorder", { fg = spec.fg3, bg = spec.bg1 })
 	hi("FzfLuaTitle", { fg = spec.fg3, bg = spec.bg1, bold = true })
 	link("FzfLuaPreviewNormal", "FzfLuaNormal")
 	link("FzfLuaPreviewBorder", "FzfLuaBorder")
@@ -267,10 +267,13 @@ function M.apply(spec, config)
 	link("CmpItemMenu", "Comment")
 
 	-- blink.cmp / Pmenu
-	hi("CmpPmenu", { bg = spec.bg2, fg = spec.fg2 })
-	hi("CmpSel", { bg = spec.sel1, fg = spec.fg1, bold = true })
-	hi("CmpDoc", { bg = spec.bg2, fg = spec.fg2 })
-	hi("CmpSignatureHelp", { bg = spec.bg2, fg = spec.fg2 })
+	hi("BlinkCmpMenu", { bg = spec.bg1, fg = spec.fg1 })
+	hi("BlinkCmpMenuBorder", { bg = spec.bg1, fg = spec.fg3 })
+	hi("BlinkCmpMenuSelection", { bg = spec.sel1, fg = spec.fg1, bold = true })
+	link("BlinkCmpDoc", "BlinkCmpMenu")
+	link("BlinkCmpDocBorder", "BlinkCmpMenuBorder")
+	link("BlinkCmpSignatureHelp", "BlinkCmpMenu")
+	link("BlinkCmpSignatureHelpBorder", "BlinkCmpMenuBorder")
 	hi("BlinkCmpDocSeparator", { bg = spec.bg2, fg = spec.palette.blue.base })
 	hi("BlinkCmpLabelMatch", { fg = spec.palette.blue.bright, bold = true })
 
