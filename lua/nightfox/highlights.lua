@@ -214,6 +214,7 @@ function M.apply(spec, config)
   -- specifics
 	hi("@keyword.luadoc", { fg = spec.palette.magenta.bright })
 	hi("@type.luadoc", { fg = syn.builtin1 })
+	link("@keyword.return.lua", "Keyword")
 	hi("@type.julia", { fg = syn.builtin1 })
 	link("@type.definition.julia", "@type.julia")
 	hi("@module.python", { fg = syn.ident })
