@@ -274,7 +274,7 @@ function M.apply(spec, config)
 	link("BlinkCmpDocBorder", "BlinkCmpMenuBorder")
 	link("BlinkCmpSignatureHelp", "BlinkCmpMenu")
 	link("BlinkCmpSignatureHelpBorder", "BlinkCmpMenuBorder")
-	hi("BlinkCmpDocSeparator", { bg = spec.bg2, fg = spec.palette.blue.base })
+	hi("BlinkCmpDocSeparator", { bg = spec.bg1, fg = spec.palette.blue.base })
 	hi("BlinkCmpLabelMatch", { fg = spec.palette.blue.bright, bold = true })
 
 	-- which-key
