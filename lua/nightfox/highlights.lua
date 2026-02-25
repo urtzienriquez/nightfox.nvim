@@ -211,6 +211,12 @@ function M.apply(spec, config)
 	link("@tag", "Keyword")
 	hi("@tag.attribute", { fg = syn.func, italic = true })
 	hi("@tag.delimiter", { fg = syn.builtin1 })
+  -- specifics
+	hi("@keyword.luadoc", { fg = spec.palette.magenta.bright })
+	hi("@type.luadoc", { fg = syn.builtin1 })
+	hi("@type.julia", { fg = syn.builtin1 })
+	link("@type.definition.julia", "@type.julia")
+	hi("@module.python", { fg = syn.ident })
 
 	-- Treesitter Markdown/LaTeX overrides
 	hi("@markup.link.label.markdown_inline", { fg = syn.keyword })
