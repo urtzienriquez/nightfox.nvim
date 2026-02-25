@@ -130,6 +130,9 @@ function M.apply(spec, config)
   hi("texRefZone", { fg = syn.keyword })
   hi("texStatement", { fg = syn.keyword })
   hi("texDelimiter", { fg = syn.keyword })
+  hi("@markup.raw.markdown_inline", { fg = syn.builtin1 })
+  link("@markup.math.latex", "Function")
+  link("@operator.latex", "Function")
   hi("markdownCode", { fg = syn.keyword })
   hi("@string.escape.markdown_inline", { fg = syn.keyword })
 
@@ -286,6 +289,10 @@ function M.apply(spec, config)
   link("WhichKeyFloat", "NormalFloat")
   link("WhichKeyValue", "Comment")
 
+  -- RMD/Pandoc ref highlighting (matchadd, overrides treesitter bold spans)
+  hi("NightfoxRmdRef", { fg = syn.keyword })
+  M.apply_rmd_refs(spec)
+
   local group = vim.api.nvim_create_augroup("NightfoxCursorLineNr", { clear = true })
   vim.api.nvim_create_autocmd({ "WinLeave", "FocusLost" }, {
     group = group,
@@ -385,14 +392,6 @@ end
 
 -- ---------------------------------------------------------------------------
 -- Fenced code block background highlighting
---
--- Uses extmarks with line_hl_group, which paints the entire line (col 0 to
--- EOL) identically to CursorLine. This is necessary because treesitter
--- highlights only cover actual character cells, leaving gaps on empty lines
--- and before indented fences.
---
--- Fences are matched by char (` or ~) and count (3+), so a ````markdown block
--- is only closed by ```` or more bare backticks, not by ```.
 -- ---------------------------------------------------------------------------
 
 local NS = vim.api.nvim_create_namespace("nightfox_code_blocks")
@@ -404,9 +403,6 @@ local ENABLED_FT = {
   pandoc = true,
 }
 
--- Returns (char, count) if the line is a fence opener, else nil.
--- Matches lines that start (after optional whitespace) with 3+ backticks or
--- tildes. Anything may follow (lang tag, options block, etc.).
 local function get_open_fence(line)
   local backticks = line:match("^%s*(`+)")
   if backticks and #backticks >= 3 then
@@ -419,7 +415,6 @@ local function get_open_fence(line)
   return nil
 end
 
--- Returns true if line is a bare closing fence matching char/count.
 local function is_close_fence(line, char, count)
   local found = line:match("^%s*(" .. vim.pesc(char) .. "+)%s*$")
   return found ~= nil and #found >= count
@@ -448,7 +443,7 @@ local function redraw_code_blocks(bufnr)
         inside = true
         fence_char = char
         fence_count = count
-        fence_start = i - 1 -- 0-indexed
+        fence_start = i - 1
       end
     elseif is_close_fence(line, fence_char, fence_count) then
       for row = fence_start, i - 1 do
@@ -467,9 +462,6 @@ end
 
 function M.apply_code_blocks(spec)
   hi("NightfoxCodeBlock", { bg = spec.bg2 })
-
-  -- Legacy/plugin syntax groups for when those syntax files are active.
-  -- These are whole-line regions so they also get the correct full-line bg.
   hi("RCodeBlock", { bg = spec.bg2 })
   hi("CodeBlock", { bg = spec.bg2 })
   vim.cmd("silent! hi! link rmdChunk NightfoxCodeBlock")
@@ -479,11 +471,6 @@ function M.apply_code_blocks(spec)
   hi("pandocCodeBlock", { bg = spec.bg2 })
   hi("pandocCodeBlockDelim", { bg = spec.bg2 })
   hi("OtterBackground", { bg = spec.bg2 })
-
-  -- Treesitter @markup.raw.block: paints character cells inside blocks so
-  -- injected-language tokens inherit the bg correctly.
-  -- @markup.raw.markdown_inline is intentionally left unset — we do not
-  -- want any background on inline code spans.
   hi("@markup.raw.block", { bg = spec.bg2 })
 
   local group = vim.api.nvim_create_augroup("NightfoxCodeBlocks", { clear = true })
@@ -506,6 +493,75 @@ function M.apply_code_blocks(spec)
     if vim.api.nvim_buf_is_loaded(bufnr) then
       vim.schedule(function()
         redraw_code_blocks(bufnr)
+      end)
+    end
+  end
+end
+
+-- ---------------------------------------------------------------------------
+-- RMD/Pandoc ref highlighting
+-- Uses matchadd so it overrides Treesitter even inside **bold** spans.
+-- The highlight group NightfoxRmdRef is defined in M.apply() before this
+-- function is called.
+-- ---------------------------------------------------------------------------
+
+local REF_PATTERNS = {
+  [[@ref([^)]*)]], -- \@ref(tab:something) — the \ is eaten by the parser
+  [[\\ref{[^}]*}]], -- \ref{appendix1}
+}
+
+local REF_FT = {
+  markdown = true,
+  rmd = true,
+  quarto = true,
+  pandoc = true,
+}
+
+function M.apply_rmd_refs(spec)
+  local group = vim.api.nvim_create_augroup("NightfoxRmdRefs", { clear = true })
+
+  local function repaint(bufnr)
+    if not vim.api.nvim_buf_is_valid(bufnr) then
+      return
+    end
+    local ft = vim.bo[bufnr].filetype
+    local base_ft = ft:match("^([^%.]+)") or ft
+    if not REF_FT[base_ft] and not REF_FT[ft] then
+      return
+    end
+
+    for _, winid in ipairs(vim.fn.win_findbuf(bufnr)) do
+      -- clear old matches for this group in this window
+      for _, match in ipairs(vim.fn.getmatches(winid)) do
+        if match.group == "NightfoxRmdRef" then
+          vim.fn.matchdelete(match.id, winid)
+        end
+      end
+      -- add fresh matches
+      for _, pat in ipairs(REF_PATTERNS) do
+        vim.fn.matchadd("NightfoxRmdRef", pat, 20, -1, { window = winid })
+      end
+    end
+  end
+
+  vim.api.nvim_create_autocmd({ "BufEnter", "BufWinEnter", "FileType", "ColorScheme" }, {
+    group = group,
+    callback = function(ev)
+      vim.schedule(function()
+        vim.schedule(function()
+          repaint(ev.buf)
+        end)
+      end)
+    end,
+  })
+
+  -- paint any already-loaded buffers immediately
+  for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
+    if vim.api.nvim_buf_is_loaded(bufnr) then
+      vim.schedule(function()
+        vim.schedule(function()
+          repaint(bufnr)
+        end)
       end)
     end
   end
