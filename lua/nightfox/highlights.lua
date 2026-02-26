@@ -376,6 +376,10 @@ function M.apply(spec, config)
   -- --------------------------------------------------------------------------
 
   link("@markup.heading", "WarningMsg")
+  link("@markup.heading.1.vimdoc", "Title")
+  link("@markup.heading.2.vimdoc", "@markup.heading.1.vimdoc")
+  link("@markup.heading.3.vimdoc", "@markup.heading.1.vimdoc")
+  link("@markup.heading.4.vimdoc", "@markup.heading.1.vimdoc")
   hi("@markup.link.label.markdown_inline", { fg = syn.keyword, underline = false })
   hi("@markup.link.label.latex", { fg = syn.keyword })
   link("@markup.link.markdown_inline", "@markup.link.label.markdown_inline")
