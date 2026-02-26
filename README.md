@@ -1,6 +1,8 @@
 # nightfox.nvim
 
-My fork of EdenEast's nightfox.nvim [link](https://github.com/EdenEast/nightfox.nvim). Check his repo for a more flexible and feature rich foxy theme :).
+My fork of [EdenEast's nightfox.nvim](https://github.com/EdenEast/nightfox.nvim). Check his repo for a more flexible and feature rich foxy theme :).
+
+I rewrote and removed most of the original repo's code, I tweaked the colors to my liking and I included an autocommand to disable `client.server_capabilities.semanticTokensProvider` from lsp-s. That way, colors are more simply defined just using treesitter. 
 
 This is just a minimal Lua-only Neovim colorscheme plugin with two themes:
 
