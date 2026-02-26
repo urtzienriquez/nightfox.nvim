@@ -268,7 +268,8 @@ function M.apply(spec, config)
 
   link("@variable", "Identifier")
   link("@variable.builtin", "@property")
-  link("@variable.parameter", "@property")
+  -- link("@variable.parameter", "@property")
+  hi("@variable.parameter", { fg = spec.palette.pblue.base })
   hi("@variable.member", { fg = syn.builtin1 })
 
   -- --------------------------------------------------------------------------
