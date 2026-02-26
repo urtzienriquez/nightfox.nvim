@@ -21,10 +21,12 @@ function M.from_hex(hex)
 end
 
 function M.to_hex(c)
-  return string.format("#%02x%02x%02x",
+  return string.format(
+    "#%02x%02x%02x",
     round(clamp(c.r, 0, 1) * 255),
     round(clamp(c.g, 0, 1) * 255),
-    round(clamp(c.b, 0, 1) * 255))
+    round(clamp(c.b, 0, 1) * 255)
+  )
 end
 
 -- Linear blend: f=0 -> self, f=1 -> other
@@ -56,11 +58,17 @@ function M.brighten(hex, v)
 
   -- to HSV
   local h, s, val = 0, 0, max
-  if max ~= 0 then s = delta / max end
+  if max ~= 0 then
+    s = delta / max
+  end
   if delta ~= 0 then
-    if max == c.r then h = ((c.g - c.b) / delta) % 6
-    elseif max == c.g then h = (c.b - c.r) / delta + 2
-    else h = (c.r - c.g) / delta + 4 end
+    if max == c.r then
+      h = ((c.g - c.b) / delta) % 6
+    elseif max == c.g then
+      h = (c.b - c.r) / delta + 2
+    else
+      h = (c.r - c.g) / delta + 4
+    end
     h = h * 60
   end
 
@@ -80,10 +88,10 @@ function M.make_shade(base, bright_factor, dim_factor, is_light)
   dim_factor = dim_factor or -0.15
   local bc = M.from_hex(base)
   return {
-    base   = base,
+    base = base,
     bright = M.to_hex(M.shade(bc, bright_factor)),
-    dim    = M.to_hex(M.shade(bc, dim_factor)),
-    light  = is_light or false,
+    dim = M.to_hex(M.shade(bc, dim_factor)),
+    light = is_light or false,
   }
 end
 
