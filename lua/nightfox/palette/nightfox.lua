@@ -53,7 +53,7 @@ local function generate_spec(pal)
     bracket     = spec.fg2,
     -- builtin0    = pal.red.base,
     builtin0    = pal.blue.base,
-    builtin1    = pal.cyan.bright,
+    builtin1    = pal.cyan.base,
     builtin2    = pal.orange.bright,
     builtin3    = pal.red.bright,
     comment     = pal.comment,
