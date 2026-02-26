@@ -11,6 +11,7 @@ local palette = {
   green = C.make_shade("#81b29a", 0.10, -0.15),
   yellow = C.make_shade("#dbc074", 0.15, -0.15),
   blue = C.make_shade("#719cd6", 0.15, -0.15),
+  ecyan = C.make_shade("#a2f9fd", 0.15, -0.15),
   magenta = C.make_shade("#9d79d6", 0.30, -0.15),
   cyan = C.make_shade("#63cdcf", 0.15, -0.15),
   white = C.make_shade("#dfdfe0", 0.15, -0.15),
@@ -73,7 +74,7 @@ local function generate_spec(pal)
     regex = pal.yellow.bright,
     statement = pal.magenta.base,
     string = pal.green.base,
-    type = pal.yellow.base,
+    type = pal.ecyan.base,
     variable = pal.white.base,
   }
 

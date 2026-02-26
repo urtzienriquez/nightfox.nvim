@@ -304,10 +304,6 @@ function M.apply(spec, config)
   -- --------------------------------------------------------------------------
 
   link("@type", "Type")
-  hi("@type.builtin", { fg = syn.builtin1 })
-  hi("@type.luadoc", { fg = syn.builtin1 })
-  hi("@type.julia", { fg = syn.builtin1 })
-  link("@type.definition.julia", "@type.julia")
 
   -- --------------------------------------------------------------------------
   -- TREESITTER › Functions & constructors
