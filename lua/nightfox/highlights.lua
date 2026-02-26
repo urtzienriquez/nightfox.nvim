@@ -314,7 +314,7 @@ function M.apply(spec, config)
   hi("@function.builtin", { fg = syn.builtin0 })
   hi("@function.macro", { fg = syn.builtin0 })
   hi("@function.call.lua", { fg = syn.builtin0 })
-  hi("@constructor", { fg = syn.ident })
+  hi("@constructor", { fg = syn.operator })
 
   -- --------------------------------------------------------------------------
   -- TREESITTER › Keywords
