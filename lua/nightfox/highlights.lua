@@ -604,6 +604,17 @@ local function is_close_fence(line, char, count)
   return found ~= nil and #found >= count
 end
 
+local function mark_row(bufnr, row)
+  vim.api.nvim_buf_set_extmark(bufnr, NS, row, 0, {
+    line_hl_group = "NightfoxCodeBlock",
+    hl_eol = true,
+    virt_text = { { string.rep(" ", 400), "NightfoxCodeBlock" } },
+    virt_text_pos = "eol",
+    virt_text_hide = true,
+    priority = 90,
+  })
+end
+
 local function redraw_code_blocks(bufnr)
   if not vim.api.nvim_buf_is_valid(bufnr) then
     return
@@ -631,10 +642,7 @@ local function redraw_code_blocks(bufnr)
       end
     elseif is_close_fence(line, fence_char, fence_count) then
       for row = fence_start, i - 1 do
-        vim.api.nvim_buf_set_extmark(bufnr, NS, row, 0, {
-          line_hl_group = "NightfoxCodeBlock",
-          priority = 90,
-        })
+        mark_row(bufnr, row)
       end
       inside = false
       fence_char = nil
@@ -654,12 +662,11 @@ function M.apply_code_blocks(spec)
   hi("pandocCodeBlock", { bg = spec.bg2 })
   hi("pandocCodeBlockDelim", { bg = spec.bg2 })
   hi("OtterBackground", { bg = spec.bg2 })
-  hi("@markup.raw.block", { bg = spec.bg2 })
   vim.cmd("silent! hi! link rmdChunk NightfoxCodeBlock")
 
   local group = vim.api.nvim_create_augroup("NightfoxCodeBlocks", { clear = true })
   vim.api.nvim_create_autocmd(
-    { "BufEnter", "BufWritePost", "TextChanged", "TextChangedI", "BufWinEnter", "CursorMoved" },
+    { "BufEnter", "BufWritePost", "TextChanged", "TextChangedI", "BufWinEnter", "WinEnter", "CursorMoved" },
     {
       group = group,
       callback = function(ev)
