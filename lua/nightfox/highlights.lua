@@ -375,6 +375,7 @@ function M.apply(spec, config)
   -- TREESITTER › Markup (Markdown / LaTeX)
   -- --------------------------------------------------------------------------
 
+  link("@markup.heading", "WarningMsg")
   hi("@markup.link.label.markdown_inline", { fg = syn.keyword, underline = false })
   hi("@markup.link.label.latex", { fg = syn.keyword })
   link("@markup.link.markdown_inline", "@markup.link.label.markdown_inline")
