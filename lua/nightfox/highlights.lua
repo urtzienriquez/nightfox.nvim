@@ -155,7 +155,7 @@ function M.apply(spec, config)
   hi("Todo", { fg = spec.bg1, bg = spec.diag.info })
   link("Character", "String")
   link("Float", "Number")
-  link("Boolean", "Constant")
+  link("Boolean", "WarningMsg")
 
   -- Identifiers & functions
   hi("Identifier", { fg = syn.ident })
