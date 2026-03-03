@@ -375,7 +375,7 @@ function M.apply(spec, config)
   -- TREESITTER › Markup (Markdown / LaTeX)
   -- --------------------------------------------------------------------------
 
-  link("@markup.heading.1.markdown", "WarningMsg")
+  hi("@markup.heading.1.markdown", { fg = spec.diag.warn, bg = bg1 })
   link("@markup.heading.2.markdown", "@markup.heading.1.markdown")
   link("@markup.heading.3.markdown", "@markup.heading.1.markdown")
   link("@markup.heading.4.markdown", "@markup.heading.1.markdown")
@@ -673,6 +673,8 @@ function M.apply_code_blocks(spec)
   hi("pandocCodeBlock", { bg = spec.bg2 })
   hi("pandocCodeBlockDelim", { bg = spec.bg2 })
   hi("OtterBackground", { bg = spec.bg2 })
+  hi("Title", { fg = spec.syntax.func, bg = spec.bg2, bold = true })
+
   vim.cmd("silent! hi! link rmdChunk NightfoxCodeBlock")
 
   local group = vim.api.nvim_create_augroup("NightfoxCodeBlocks", { clear = true })
