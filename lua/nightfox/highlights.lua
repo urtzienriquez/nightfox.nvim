@@ -619,9 +619,6 @@ local function mark_row(bufnr, row)
   vim.api.nvim_buf_set_extmark(bufnr, NS, row, 0, {
     line_hl_group = "NightfoxCodeBlock",
     hl_eol = true,
-    virt_text = { { string.rep(" ", 400), "NightfoxCodeBlock" } },
-    virt_text_pos = "eol",
-    virt_text_hide = true,
     priority = 90,
   })
 end
@@ -665,17 +662,18 @@ end
 
 function M.apply_code_blocks(spec)
   hi("NightfoxCodeBlock", { bg = spec.bg2 })
-  hi("RCodeBlock", { bg = spec.bg2 })
-  hi("CodeBlock", { bg = spec.bg2 })
-  hi("mkdCode", { bg = spec.bg2 })
-  hi("mkdCodeStart", { bg = spec.bg2 })
-  hi("mkdCodeEnd", { bg = spec.bg2 })
-  hi("pandocCodeBlock", { bg = spec.bg2 })
-  hi("pandocCodeBlockDelim", { bg = spec.bg2 })
-  hi("OtterBackground", { bg = spec.bg2 })
-  hi("Title", { fg = spec.syntax.func, bg = spec.bg2, bold = true })
-
+  hi("RNvimTitle", { fg = spec.syntax.func, bg = spec.bg2, bold = true })
   vim.cmd("silent! hi! link rmdChunk NightfoxCodeBlock")
+
+  vim.api.nvim_create_autocmd("FileType", {
+    pattern = { "r", "rmd", "quarto" },
+    callback = function()
+      vim.schedule(function()
+        local win = vim.api.nvim_get_current_win()
+        vim.wo[win].winhighlight = "Title:RNvimTitle"
+      end)
+    end,
+  })
 
   local group = vim.api.nvim_create_augroup("NightfoxCodeBlocks", { clear = true })
   vim.api.nvim_create_autocmd(
