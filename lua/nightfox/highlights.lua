@@ -258,9 +258,9 @@ function M.apply(spec, config)
   -- Underlines
   hi("DiagnosticUnderlineError", { undercurl = true, sp = spec.diag.error })
   hi("DiagnosticUnderlineWarn", { undercurl = true, sp = spec.diag.warn })
-  hi("DiagnosticUnderlineInfo", { undercurl = false, sp = spec.diag.info })
-  hi("DiagnosticUnderlineHint", { undercurl = false, sp = spec.diag.hint })
-  hi("DiagnosticUnderlineOk", { undercurl = false, sp = spec.diag.ok })
+  hi("DiagnosticUnderlineInfo", { undercurl = true, sp = spec.diag.info })
+  hi("DiagnosticUnderlineHint", { undercurl = true, sp = spec.diag.hint })
+  hi("DiagnosticUnderlineOk", { undercurl = true, sp = spec.diag.ok })
 
   -- --------------------------------------------------------------------------
   -- TREESITTER › Variables
