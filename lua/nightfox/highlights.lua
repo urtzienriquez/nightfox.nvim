@@ -91,7 +91,7 @@ function M.apply(spec, config)
 
   hi("Visual", { bg = spec.sel0 })
   hi("Search", { fg = spec.fg1, bg = spec.sel1 })
-  hi("IncSearch", { fg = spec.bg1, bg = spec.diag.hint })
+  hi("IncSearch", { fg = spec.bg1, bg = spec.diag.warn })
   hi("Substitute", { fg = spec.bg1, bg = spec.diag.error })
   hi("MatchParen", { fg = spec.diag.warn, bold = true })
   link("VisualNOS", "Visual")
