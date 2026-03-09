@@ -488,17 +488,31 @@ function M.apply(spec, config)
   -- AUTOCMDS › CursorLineNr active / inactive
   -- --------------------------------------------------------------------------
 
+  local rnvim_ft = { r = true, rmd = true, quarto = true }
+
   local group = vim.api.nvim_create_augroup("NightfoxCursorLineNr", { clear = true })
   vim.api.nvim_create_autocmd({ "WinLeave", "FocusLost" }, {
     group = group,
     callback = function()
-      vim.wo.winhighlight = "CursorLineNr:CursorLineNrNC"
+      local ft = vim.bo.filetype
+      local base_ft = ft:match("^([^%.]+)") or ft
+      if rnvim_ft[ft] or rnvim_ft[base_ft] then
+        vim.wo.winhighlight = "CursorLineNr:CursorLineNrNC,Title:RNvimTitle"
+      else
+        vim.wo.winhighlight = "CursorLineNr:CursorLineNrNC"
+      end
     end,
   })
   vim.api.nvim_create_autocmd({ "WinEnter", "FocusGained", "BufEnter" }, {
     group = group,
     callback = function()
-      vim.wo.winhighlight = ""
+      local ft = vim.bo.filetype
+      local base_ft = ft:match("^([^%.]+)") or ft
+      if rnvim_ft[ft] or rnvim_ft[base_ft] then
+        vim.wo.winhighlight = "Title:RNvimTitle"
+      else
+        vim.wo.winhighlight = ""
+      end
     end,
   })
 end
@@ -670,16 +684,6 @@ function M.apply_code_blocks(spec)
   hi("NightfoxCodeBlock", { bg = spec.bg2 })
   hi("RNvimTitle", { fg = spec.syntax.func, bg = spec.bg2, bold = true })
   vim.cmd("silent! hi! link rmdChunk NightfoxCodeBlock")
-
-  vim.api.nvim_create_autocmd("FileType", {
-    pattern = { "r", "rmd", "quarto" },
-    callback = function()
-      vim.schedule(function()
-        local win = vim.api.nvim_get_current_win()
-        vim.wo[win].winhighlight = "Title:RNvimTitle"
-      end)
-    end,
-  })
 
   local group = vim.api.nvim_create_augroup("NightfoxCodeBlocks", { clear = true })
   vim.api.nvim_create_autocmd(
