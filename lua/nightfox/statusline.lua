@@ -47,8 +47,8 @@ local function setup_highlights(spec)
   vim.api.nvim_set_hl(0, "StatusLineMinimal", { bg = spec.bg1, fg = spec.bg1 })
   vim.api.nvim_set_hl(0, "StatusLine", { bg = spec.bg0, fg = spec.fg3 })
   vim.api.nvim_set_hl(0, "StatusLineNC", { bg = spec.bg0, fg = spec.fg3 })
-  vim.api.nvim_set_hl(0, "SLMacro", { fg = palette.cyan.base })
-  vim.api.nvim_set_hl(0, "SLMode", { fg = spec.bg0, bg = palette.blue.base, bold = true })
+  -- vim.api.nvim_set_hl(0, "SLMacro", { fg = palette.cyan.base })
+  -- vim.api.nvim_set_hl(0, "SLMode", { fg = spec.bg0, bg = palette.blue.base, bold = true })
 end
 
 -- Call this once from nightfox/init.lua, passing the resolved spec.
@@ -88,38 +88,38 @@ function M.apply(spec)
   -- --------------------------
   -- Mode
   -- --------------------------
-  local block = vim.api.nvim_replace_termcodes("<C-v>", true, false, true)
-  local sblock = vim.api.nvim_replace_termcodes("<C-s>", true, false, true)
-
-  local mode_map = {
-    ["n"] = " NORMAL",
-    ["no"] = " O-PEND",
-    ["v"] = " VISUAL",
-    ["V"] = " V-LINE",
-    [block] = " V-BLOCK",
-    ["s"] = " SELECT",
-    ["S"] = " S-LINE",
-    [sblock] = " S-BLOCK",
-    ["i"] = " INSERT",
-    ["ic"] = " INSERT",
-    ["R"] = " REPLACE",
-    ["Rv"] = " V-REPL",
-    ["c"] = " COMMAND",
-    ["t"] = " TERM",
-    ["nt"] = " N-TERM",
-  }
-
-  function _G.st_mode()
-    return " " .. (mode_map[vim.fn.mode()] or vim.fn.mode()) .. " "
-  end
+  -- local block = vim.api.nvim_replace_termcodes("<C-v>", true, false, true)
+  -- local sblock = vim.api.nvim_replace_termcodes("<C-s>", true, false, true)
+  --
+  -- local mode_map = {
+  --   ["n"] = " NORMAL",
+  --   ["no"] = " O-PEND",
+  --   ["v"] = " VISUAL",
+  --   ["V"] = " V-LINE",
+  --   [block] = " V-BLOCK",
+  --   ["s"] = " SELECT",
+  --   ["S"] = " S-LINE",
+  --   [sblock] = " S-BLOCK",
+  --   ["i"] = " INSERT",
+  --   ["ic"] = " INSERT",
+  --   ["R"] = " REPLACE",
+  --   ["Rv"] = " V-REPL",
+  --   ["c"] = " COMMAND",
+  --   ["t"] = " TERM",
+  --   ["nt"] = " N-TERM",
+  -- }
+  --
+  -- function _G.st_mode()
+  --   return " " .. (mode_map[vim.fn.mode()] or vim.fn.mode()) .. " "
+  -- end
 
   -- --------------------------
   -- Macro recording
   -- --------------------------
-  function _G.st_macro()
-    local reg = vim.fn.reg_recording()
-    return reg ~= "" and ("  recording @" .. reg .. " ") or ""
-  end
+  -- function _G.st_macro()
+  --   local reg = vim.fn.reg_recording()
+  --   return reg ~= "" and ("  recording @" .. reg .. " ") or ""
+  -- end
 
   -- --------------------------
   -- Async git status
@@ -375,8 +375,8 @@ function M.apply(spec)
   -- --------------------------
   vim.o.laststatus = 3
   vim.o.statusline = table.concat({
-    "%#SLMode#%{v:lua.st_mode()}%* ",
-    "%#SLFileName#%t %m%* ",
+    -- "%#SLMode#%{v:lua.st_mode()}%* ",
+    "%#SLFileName# %t %m%* ",
     "%#SLGitBranch#%{v:lua.st_branch()}%*",
     "%#SLGitAdd#%{v:lua.st_added()}%*",
     "%#SLGitDelete#%{v:lua.st_removed()}%*",
@@ -384,7 +384,7 @@ function M.apply(spec)
     "%#SLDiagWarn#%{v:lua.st_warn()}%*",
     "%#SLDiagInfo#%{v:lua.st_info()}%*",
     "%#SLDiagHint#%{v:lua.st_hint()}%*",
-    "%#SLMacro#%{v:lua.st_macro()}%*",
+    -- "%#SLMacro#%{v:lua.st_macro()}%*",
     "%=",
     "%{%v:lua.st_filetype_text()%} ",
     "%4{v:lua.st_position()} ",
