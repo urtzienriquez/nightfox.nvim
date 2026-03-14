@@ -81,7 +81,7 @@ local function generate_spec(pal)
 
   spec.diag = {
     error = pal.red.base,
-    warn = pal.yellow.dim,
+    warn = pal.yellow.base,
     info = pal.cyan.base,
     hint = pal.green.base,
     ok = pal.green.base,
