@@ -80,4 +80,33 @@ function M.load(name)
   })
 end
 
+-- NEW: Helper to identify the theme based on system settings
+local function get_gnome_theme()
+  local handle = io.popen("gsettings get org.gnome.desktop.interface color-scheme")
+  local output = handle:read("*a")
+  handle:close()
+  return output:find("dark") and "nightfox" or "dayfox"
+end
+
+-- NEW: The listener function
+local function apply_theme_by_gnome()
+  local theme = get_gnome_theme()
+
+  -- Only reload if the colorscheme is actually different
+  if vim.g.colors_name ~= theme then
+    M.load(theme) -- Call the local M.load function directly
+  end
+end
+
+-- Apply on startup (only if not already set by user config)
+if not vim.g.colors_name then
+  M.load(get_gnome_theme())
+end
+
+-- Register the auto-update
+vim.api.nvim_create_autocmd({ "FocusGained", "BufEnter" }, {
+  group = vim.api.nvim_create_augroup("NightfoxGnomeSync", { clear = true }),
+  callback = apply_theme_by_gnome,
+})
+
 return M
