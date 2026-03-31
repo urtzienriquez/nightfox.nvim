@@ -355,15 +355,15 @@ function M.apply(spec)
     end,
   })
 
-  -- Minimal statusline for oil / empty buffers
-  vim.api.nvim_create_autocmd({ "FileType", "BufEnter", "BufModifiedSet" }, {
-    group = aug,
-    callback = function()
-      local is_oil = vim.bo.filetype == "oil"
-      local empty = vim.api.nvim_buf_get_name(0) == "" and vim.bo.buftype == "" and not vim.bo.modified
-      vim.wo.statusline = (is_oil or empty) and "%#StatusLineMinimal# " or ""
-    end,
-  })
+  -- -- Minimal statusline for oil / empty buffers
+  -- vim.api.nvim_create_autocmd({ "FileType", "BufEnter", "BufModifiedSet" }, {
+  --   group = aug,
+  --   callback = function()
+  --     local is_oil = vim.bo.filetype == "oil"
+  --     local empty = vim.api.nvim_buf_get_name(0) == "" and vim.bo.buftype == "" and not vim.bo.modified
+  --     vim.wo.statusline = (is_oil or empty) and "%#StatusLineMinimal# " or ""
+  --   end,
+  -- })
 
   vim.api.nvim_create_user_command("GitStatusRefresh", function()
     update_debounced(vim.api.nvim_get_current_buf(), 0)
