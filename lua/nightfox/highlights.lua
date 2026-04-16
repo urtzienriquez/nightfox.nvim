@@ -307,6 +307,7 @@ function M.apply(spec, config)
   -- --------------------------------------------------------------------------
 
   link("@type", "Type")
+  link("@type.builtin", "Type")
 
   -- --------------------------------------------------------------------------
   -- TREESITTER › Functions & constructors
