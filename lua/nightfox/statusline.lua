@@ -11,6 +11,7 @@ local M = {}
 -- default statusline value, which can be non-empty in some contexts.
 local function statusline_plugin_active()
   local plugins = {
+    "mini.statusline",
     "lualine", -- nvim-lualine/lualine.nvim
     "feline", -- feline-nvim/feline.nvim
     "galaxyline", -- glepnir/galaxyline.nvim
