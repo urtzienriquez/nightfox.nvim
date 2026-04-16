@@ -148,7 +148,8 @@ function M.apply(spec, config)
   hi("Comment", { fg = syn.comment, italic = true })
 
   -- Constants
-  hi("Constant", { fg = syn.const })
+  -- hi("Constant", { fg = syn.const })
+  hi("Constant", { fg = spec.fg1, bold = true })
   hi("String", { fg = syn.string })
   hi("Number", { fg = syn.number })
   hi("Error", { fg = spec.diag.error })
@@ -165,7 +166,8 @@ function M.apply(spec, config)
   hi("Statement", { fg = syn.keyword })
   hi("Conditional", { fg = syn.conditional })
   hi("Operator", { fg = syn.operator })
-  hi("Keyword", { fg = syn.keyword })
+  -- hi("Keyword", { fg = syn.keyword })
+  hi("Keyword", { fg = spec.fg1, bold = true })
   link("Repeat", "Conditional")
   link("Label", "Conditional")
   link("Exception", "Keyword")
@@ -332,7 +334,7 @@ function M.apply(spec, config)
   link("@keyword.storage", "StorageClass")
   link("@keyword.repeat", "Keyword")
   link("@keyword.exception", "Exception")
-  link("@keyword.conditional", "Conditional")
+  link("@keyword.conditional", "Keyword")
 
   -- --------------------------------------------------------------------------
   -- TREESITTER › Operators & punctuation
