@@ -59,7 +59,7 @@ function M.apply(spec, config)
   -- EDITOR › Windows & splits
   -- --------------------------------------------------------------------------
 
-  hi("WinSeparator", { fg = spec.syntax.func })
+  hi("WinSeparator", { fg = spec.fg3 })
   hi("WinBar", { fg = spec.fg3, bg = bg1, bold = true })
   hi("WinBarNC", { fg = spec.fg3, bg = bg1, bold = true })
   link("VertSplit", "WinSeparator")
