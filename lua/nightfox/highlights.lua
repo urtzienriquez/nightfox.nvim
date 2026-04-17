@@ -131,7 +131,7 @@ function M.apply(spec, config)
   -- --------------------------------------------------------------------------
 
   hi("MsgNotificationArea", { fg = spec.fg3, bg = "NONE" })
-  hi("MsgBorder", { fg = syn.func, bg = "NONE" })
+  hi("MsgBorder", { fg = spec.fg3, bg = "NONE" })
   vim.api.nvim_create_autocmd("FileType", {
     pattern = { "msg" },
     callback = function()
