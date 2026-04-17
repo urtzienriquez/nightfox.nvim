@@ -31,7 +31,7 @@ function M.apply(spec, config)
   hi("EndOfBuffer", { fg = spec.bg1 })
   hi("NonText", { fg = spec.bg4 })
   hi("Whitespace", { fg = spec.bg3 })
-  link("SpecialKey", "NonText")
+  link("SpecialKey", "FloatBorder")
 
   -- --------------------------------------------------------------------------
   -- EDITOR › Cursor & current line
