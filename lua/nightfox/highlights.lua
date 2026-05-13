@@ -518,6 +518,15 @@ function M.apply(spec, config)
       end
     end,
   })
+
+  -- Latex section special highlight
+  hi("LatexSectionLine", { fg = spec.diag.warn, bold = true })
+  vim.api.nvim_create_autocmd({ "BufEnter", "FileType" }, {
+    pattern = { "tex", "rnoweb" },
+    callback = function()
+      vim.fn.matchadd("LatexSectionLine", [[^\\.*section{.*}]], 100)
+    end,
+  })
 end
 
 -- ============================================================================
@@ -619,6 +628,7 @@ local ENABLED_FT = {
   rmd = true,
   quarto = true,
   pandoc = true,
+  rnoweb = true,
 }
 
 local function get_open_fence(line)
@@ -659,6 +669,28 @@ local function redraw_code_blocks(bufnr)
   vim.api.nvim_buf_clear_namespace(bufnr, NS, 0, -1)
 
   local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+
+  -- Rnw code chunks: <<...>>= ... @
+  if ft == "rnoweb" then
+    for i, line in ipairs(lines) do
+      if line:match("^<<(.*)>>=%s*$") then
+        local start_row = i - 1
+        local j = i + 1
+        while j <= #lines do
+          if lines[j]:find("^@%s*$") then
+            for row = start_row, j - 1 do
+              mark_row(bufnr, row)
+            end
+            break
+          end
+          j = j + 1
+        end
+      end
+    end
+    return
+  end
+
+  -- Fenced code blocks: ``` ... ```
   local inside = false
   local fence_char, fence_count, fence_start
 
