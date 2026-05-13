@@ -521,10 +521,13 @@ function M.apply(spec, config)
 
   -- Latex section special highlight
   hi("LatexSectionLine", { fg = spec.diag.warn, bold = true })
+  hi("LatexChunkHeader", { fg = syn.conditional })
   vim.api.nvim_create_autocmd({ "BufEnter", "FileType" }, {
     pattern = { "tex", "rnoweb" },
     callback = function()
       vim.fn.matchadd("LatexSectionLine", [[^\\.*section{.*}]], 100)
+      vim.fn.matchadd("LatexChunkHeader", [[^<<.\{-}>>=]], 101)
+      vim.fn.matchadd("LatexChunkHeader", [[^@$]], 101)
     end,
   })
 end
