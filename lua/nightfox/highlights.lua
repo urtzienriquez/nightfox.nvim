@@ -193,17 +193,6 @@ function M.apply(spec, config)
   link("SpecialComment", "Special")
   link("Debug", "Special")
 
-  -- --------------------------------------------------------------------------
-  -- SYNTAX › Citation & reference fixes (Pandoc / LaTeX / Markdown)
-  -- --------------------------------------------------------------------------
-
-  hi("pandocCiteKey", { fg = syn.keyword })
-  hi("pandocCiteAnchor", { fg = syn.keyword })
-  hi("pandocCiteLocator", { fg = syn.keyword })
-  hi("pandocPCite", { fg = syn.keyword })
-  hi("texRefZone", { fg = syn.keyword })
-  hi("texStatement", { fg = syn.keyword })
-  hi("texDelimiter", { fg = syn.keyword })
   hi("markdownCode", { fg = syn.keyword })
   hi("@markup.raw.markdown_inline", { fg = syn.builtin1 })
   hi("@string.escape.markdown_inline", { fg = syn.keyword })
@@ -520,14 +509,32 @@ function M.apply(spec, config)
   })
 
   -- Latex section special highlight
-  hi("LatexSectionLine", { fg = spec.diag.warn, bold = true })
+  hi("LatexSection", { fg = spec.diag.warn, bold = true })
+  hi("LatexFrametitle", { fg = spec.diag.info, bold = true })
   hi("LatexChunkHeader", { fg = syn.conditional })
   vim.api.nvim_create_autocmd({ "BufEnter", "FileType" }, {
     pattern = { "tex", "rnoweb" },
     callback = function()
-      vim.fn.matchadd("LatexSectionLine", [[^\\.*section{.*}]], 100)
+      vim.fn.matchadd("LatexSection", [[^\\.*section{.*}]], 100)
+      vim.fn.matchadd("LatexFrametitle", [[\\frametitle{.*}]], 100)
       vim.fn.matchadd("LatexChunkHeader", [[^<<.\{-}>>=]], 101)
       vim.fn.matchadd("LatexChunkHeader", [[^@$]], 101)
+    end,
+  })
+
+  -- Pandoc / citation & LaTeX ref highlights (rmd / quarto / pandoc / markdown only)
+  local pandoc_ft = { rmd = true, quarto = true, pandoc = true, markdown = true }
+  vim.api.nvim_create_augroup("NightfoxPandocHighlights", { clear = true })
+  vim.api.nvim_create_autocmd({ "FileType", "ColorScheme" }, {
+    pattern = vim.tbl_keys(pandoc_ft),
+    callback = function()
+      hi("pandocCiteKey", { fg = syn.keyword })
+      hi("pandocCiteAnchor", { fg = syn.keyword })
+      hi("pandocCiteLocator", { fg = syn.keyword })
+      hi("pandocPCite", { fg = syn.keyword })
+      hi("texRefZone", { fg = syn.keyword })
+      hi("texStatement", { fg = syn.keyword })
+      hi("texDelimiter", { fg = syn.keyword })
     end,
   })
 end
