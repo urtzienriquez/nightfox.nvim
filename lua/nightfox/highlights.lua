@@ -515,7 +515,7 @@ function M.apply(spec, config)
   vim.api.nvim_create_autocmd({ "BufEnter", "FileType" }, {
     pattern = { "tex", "rnoweb" },
     callback = function()
-      vim.fn.matchadd("LatexSection", [[^\\.*section{.*}]], 100)
+      vim.fn.matchadd("LatexSection", [[^\\.*section\*\?{.*}]], 100)
       vim.fn.matchadd("LatexFrametitle", [[\\frametitle{.*}]], 100)
       vim.fn.matchadd("LatexChunkHeader", [[^<<.\{-}>>=]], 101)
       vim.fn.matchadd("LatexChunkHeader", [[^@$]], 101)
