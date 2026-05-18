@@ -519,6 +519,7 @@ function M.apply(spec, config)
       vim.fn.matchadd("LatexFrametitle", [[\\frametitle{.*}]], 100)
       vim.fn.matchadd("LatexChunkHeader", [[^<<.\{-}>>=]], 101)
       vim.fn.matchadd("LatexChunkHeader", [[^@$]], 101)
+      vim.fn.matchadd("DiagnosticVirtualTextWarn", [[\\todo]], 101)
     end,
   })
 
