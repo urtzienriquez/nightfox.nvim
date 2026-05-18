@@ -513,7 +513,7 @@ function M.apply(spec, config)
   hi("LatexFrametitle", { fg = spec.diag.info, bold = true })
   hi("LatexChunkHeader", { fg = syn.conditional })
   vim.api.nvim_create_autocmd({ "BufEnter", "FileType" }, {
-    pattern = { "tex", "rnoweb" },
+    pattern = { "tex", "rnoweb", "jnoweb" },
     callback = function()
       vim.fn.matchadd("LatexSection", [[^\\.*section\*\?{.*}]], 100)
       vim.fn.matchadd("LatexFrametitle", [[\\frametitle{.*}]], 100)
