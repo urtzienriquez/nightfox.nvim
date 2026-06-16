@@ -516,7 +516,7 @@ function M.apply(spec, config)
     pattern = { "tex", "rnoweb", "jnoweb" },
     callback = function()
       vim.fn.matchadd("LatexSection", [[^\\.*section\*\?{.*}]], 100)
-      vim.fn.matchadd("LatexFrametitle", [[\\frametitle{.*}]], 100)
+      vim.fn.matchadd("LatexFrametitle", [[^\s*\\frametitle{.*}]], 100)
       vim.fn.matchadd("LatexChunkHeader", [[^<<.\{-}>>=]], 101)
       vim.fn.matchadd("LatexChunkHeader", [[^@$]], 101)
       vim.fn.matchadd("DiagnosticVirtualTextWarn", [[\\todo]], 101)
