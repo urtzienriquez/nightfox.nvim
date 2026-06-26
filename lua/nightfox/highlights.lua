@@ -509,12 +509,15 @@ function M.apply(spec, config)
   })
 
   -- Latex section special highlight
+  link("LatexDocument", "DiagnosticVirtualTextWarn")
   hi("LatexSection", { fg = spec.diag.warn, bold = true })
   hi("LatexFrametitle", { fg = spec.diag.info, bold = true })
   hi("LatexChunkHeader", { fg = syn.conditional })
   vim.api.nvim_create_autocmd({ "BufEnter", "FileType" }, {
     pattern = { "tex", "rnoweb", "jnoweb" },
     callback = function()
+      vim.fn.matchadd("LatexDocument", [[^\\begin{document}]], 100)
+      vim.fn.matchadd("LatexDocument", [[^\\end{document}]], 100)
       vim.fn.matchadd("LatexSection", [[^\\.*section\*\?{.*}]], 100)
       vim.fn.matchadd("LatexFrametitle", [[^\s*\\frametitle{.*}]], 100)
       vim.fn.matchadd("LatexChunkHeader", [[^<<.\{-}>>=]], 101)
