@@ -512,29 +512,47 @@ function M.apply(spec, config)
     "CursorLineNr:CursorLineNrNC",
   }, ",")
 
+  local function is_empty()
+    if vim.bo.modified or vim.fn.bufname("%") ~= "" then
+      return false
+    end
+    return vim.fn.line("$") == 1 and vim.fn.getline(1) == ""
+  end
+
+  local function set_gutter(force_dim)
+    local wn = vim.api.nvim_get_current_win()
+    local ft = vim.bo.filetype
+    local base_ft = ft:match("^([^%.]+)") or ft
+    local dim = force_dim or is_empty()
+    local targets = ""
+    if dim then
+      targets = GUTTER_NC
+    end
+    if rnvim_ft[ft] or rnvim_ft[base_ft] then
+      targets = targets == "" and "Title:RNvimTitle" or (targets .. ",Title:RNvimTitle")
+    end
+    if vim.api.nvim_get_option_value("winhighlight", { win = wn }) ~= targets then
+      vim.api.nvim_set_option_value("winhighlight", targets, { win = wn })
+    end
+  end
+
   local group = vim.api.nvim_create_augroup("NightfoxGutterNC", { clear = true })
   vim.api.nvim_create_autocmd({ "WinLeave", "FocusLost" }, {
     group = group,
     callback = function()
-      local ft = vim.bo.filetype
-      local base_ft = ft:match("^([^%.]+)") or ft
-      local targets = GUTTER_NC
-      if rnvim_ft[ft] or rnvim_ft[base_ft] then
-        targets = targets .. ",Title:RNvimTitle"
-      end
-      vim.wo.winhighlight = targets
+      set_gutter(true)
     end,
   })
   vim.api.nvim_create_autocmd({ "WinEnter", "FocusGained", "BufEnter" }, {
     group = group,
     callback = function()
-      local ft = vim.bo.filetype
-      local base_ft = ft:match("^([^%.]+)") or ft
-      if rnvim_ft[ft] or rnvim_ft[base_ft] then
-        vim.wo.winhighlight = "Title:RNvimTitle"
-      else
-        vim.wo.winhighlight = ""
-      end
+      set_gutter(false)
+    end,
+  })
+  vim.api.nvim_create_autocmd({ "InsertEnter", "TextChanged", "TextChangedI" }, {
+    group = group,
+    callback = function()
+      set_gutter(false)
     end,
   })
 
