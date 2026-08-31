@@ -470,6 +470,21 @@ function M.apply(spec, config)
   hi("LazyH1", { fg = spec.bg1, bg = spec.diag.hint })
 
   -- --------------------------------------------------------------------------
+  -- PLUGINS › mini.statusline
+  -- --------------------------------------------------------------------------
+
+  hi("MiniStatuslineModeNormal",  { fg = spec.bg1, bg = spec.palette.blue.base, bold = true })
+  hi("MiniStatuslineModeInsert",  { fg = spec.bg1, bg = spec.palette.green.base, bold = true })
+  hi("MiniStatuslineModeVisual",  { fg = spec.bg1, bg = spec.palette.magenta.base, bold = true })
+  hi("MiniStatuslineModeReplace", { fg = spec.bg1, bg = spec.palette.red.base, bold = true })
+  hi("MiniStatuslineModeCommand", { fg = spec.bg1, bg = spec.palette.yellow.base, bold = true })
+  hi("MiniStatuslineModeOther",   { fg = spec.bg1, bg = spec.palette.cyan.base, bold = true })
+  hi("MiniStatuslineDevinfo",     { fg = spec.fg1, bg = spec.bg2 })
+  hi("MiniStatuslineFilename",    { fg = spec.fg3, bg = spec.bg0 })
+  hi("MiniStatuslineFileinfo",    { fg = spec.fg2, bg = spec.bg2 })
+  hi("MiniStatuslineInactive",    { fg = spec.fg3, bg = spec.bg0 })
+
+  -- --------------------------------------------------------------------------
   -- RMD / Pandoc ref highlighting (matchadd — overrides treesitter bold spans)
   -- --------------------------------------------------------------------------
 
