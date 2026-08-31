@@ -39,7 +39,7 @@ function M.apply(spec, config)
 
   hi("Cursor", { fg = spec.bg1, bg = spec.fg1 })
   hi("CursorLine", { bg = spec.bg3 })
-  hi("CursorLineNr", { fg = spec.diag.warn, bold = true })
+  hi("CursorLineNr", { bg = spec.bg0, fg = spec.diag.warn, bold = true })
   hi("CursorLineNrNC", { fg = spec.fg3, bold = true })
   hi("MsgArea", { fg = spec.fg1, bg = spec.bg1 })
   link("lCursor", "Cursor")
@@ -50,9 +50,15 @@ function M.apply(spec, config)
   -- EDITOR › Gutter (line numbers, signs, folds)
   -- --------------------------------------------------------------------------
 
-  hi("LineNr", { fg = spec.fg3 })
-  hi("SignColumn", { fg = spec.fg3 })
-  hi("FoldColumn", { fg = spec.fg3 })
+  hi("LineNr", { fg = spec.fg3, bg = spec.bg0 })
+  hi("SignColumn", { fg = spec.fg3, bg = spec.bg0 })
+  hi("FoldColumn", { fg = spec.fg3, bg = spec.bg0 })
+
+  hi("LineNrNC", { fg = spec.fg3, bg = spec.bg1 })
+  hi("LineNrAboveNC", { fg = spec.fg3, bg = spec.bg1 })
+  hi("LineNrBelowNC", { fg = spec.fg3, bg = spec.bg1 })
+  hi("SignColumnNC", { fg = spec.fg3, bg = spec.bg1 })
+  hi("FoldColumnNC", { fg = spec.fg3, bg = spec.bg1 })
   hi("Folded", { fg = spec.fg3, bg = spec.bg2 })
 
   -- --------------------------------------------------------------------------
@@ -492,22 +498,31 @@ function M.apply(spec, config)
   M.apply_rmd_refs(spec)
 
   -- --------------------------------------------------------------------------
-  -- AUTOCMDS › CursorLineNr active / inactive
+  -- AUTOCMDS › Gutter dimming (active bg0 → inactive bg1)
   -- --------------------------------------------------------------------------
 
   local rnvim_ft = { r = true, rmd = true, quarto = true }
 
-  local group = vim.api.nvim_create_augroup("NightfoxCursorLineNr", { clear = true })
+  local GUTTER_NC = table.concat({
+    "LineNr:LineNrNC",
+    "LineNrAbove:LineNrAboveNC",
+    "LineNrBelow:LineNrBelowNC",
+    "SignColumn:SignColumnNC",
+    "FoldColumn:FoldColumnNC",
+    "CursorLineNr:CursorLineNrNC",
+  }, ",")
+
+  local group = vim.api.nvim_create_augroup("NightfoxGutterNC", { clear = true })
   vim.api.nvim_create_autocmd({ "WinLeave", "FocusLost" }, {
     group = group,
     callback = function()
       local ft = vim.bo.filetype
       local base_ft = ft:match("^([^%.]+)") or ft
+      local targets = GUTTER_NC
       if rnvim_ft[ft] or rnvim_ft[base_ft] then
-        vim.wo.winhighlight = "CursorLineNr:CursorLineNrNC,Title:RNvimTitle"
-      else
-        vim.wo.winhighlight = "CursorLineNr:CursorLineNrNC"
+        targets = targets .. ",Title:RNvimTitle"
       end
+      vim.wo.winhighlight = targets
     end,
   })
   vim.api.nvim_create_autocmd({ "WinEnter", "FocusGained", "BufEnter" }, {
