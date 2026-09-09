@@ -77,9 +77,9 @@ function M.apply(spec, config)
 
   hi("StatusLine", { fg = spec.fg2, bg = spec.bg0 })
   hi("StatusLineNC", { fg = spec.fg3, bg = spec.bg0 })
-  hi("TabLine", { fg = spec.fg3, bg = spec.bg0 })
+  hi("TabLine", { fg = spec.fg2, bg = spec.bg2 })
   hi("TabLineFill", { bg = spec.bg0 })
-  hi("TabLineSel", { fg = spec.fg1, bg = spec.bg1, bold = true })
+  hi("TabLineSel", { fg = spec.bg1, bg = spec.fg3, bold = true })
   hi("Title", { fg = syn.func, bold = true, bg = "NONE" })
 
   -- --------------------------------------------------------------------------
