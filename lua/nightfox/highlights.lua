@@ -38,7 +38,6 @@ function M.apply(spec, config)
   -- --------------------------------------------------------------------------
 
   hi("Cursor", { fg = spec.bg1, bg = spec.fg1 })
-  hi("MCursor", {fg = spec.diag_bg.warn, bg = spec.diag.warn })
   hi("CursorLine", { bg = spec.bg3 })
   hi("CursorLineNr", { bg = spec.bg0, fg = spec.diag.warn, bold = true })
   hi("CursorLineNrNC", { fg = spec.fg3, bold = true })
