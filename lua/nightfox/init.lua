@@ -80,33 +80,98 @@ function M.load(name)
   })
 end
 
--- NEW: Helper to identify the theme based on system settings
-local function get_gnome_theme()
+-- GNOME dark/light auto-detection, with a state-file cache so startup never
+-- has to block on a subprocess spawn: the cached theme applies instantly,
+-- then an async check corrects it in the rare case it's stale.
+local state_file = vim.fn.stdpath("state") .. "/nightfox_theme"
+
+local function read_cached_theme()
+  local f = io.open(state_file, "r")
+  if not f then
+    return nil
+  end
+  local content = f:read("*a")
+  f:close()
+  content = content:gsub("%s+$", "")
+  return valid_themes[content] and content or nil
+end
+
+local function write_cached_theme(name)
+  local f = io.open(state_file, "w")
+  if f then
+    f:write(name)
+    f:close()
+  end
+end
+
+-- Synchronous fallback: only used on the very first run, before any cache exists.
+local function get_gnome_theme_sync()
   local handle = io.popen("gsettings get org.gnome.desktop.interface color-scheme")
-  local output = handle:read("*a")
-  handle:close()
+  local output = handle and handle:read("*a") or ""
+  if handle then
+    handle:close()
+  end
   return output:find("dark") and "nightfox" or "dayfox"
 end
 
--- NEW: The listener function
-local function apply_theme_by_gnome()
-  local theme = get_gnome_theme()
-
-  -- Only reload if the colorscheme is actually different
-  if vim.g.colors_name ~= theme then
-    M.load(theme) -- Call the local M.load function directly
-  end
+-- Async check: reloads + refreshes the cache only if the real theme differs
+-- from what's currently applied. Never blocks the main loop.
+local function refresh_theme_from_gnome()
+  vim.system(
+    { "gsettings", "get", "org.gnome.desktop.interface", "color-scheme" },
+    { text = true },
+    function(res)
+      if not res or res.code ~= 0 or not res.stdout then
+        return
+      end
+      local theme = res.stdout:find("dark") and "nightfox" or "dayfox"
+      vim.schedule(function()
+        if vim.g.colors_name ~= theme then
+          M.load(theme)
+        end
+        write_cached_theme(theme)
+      end)
+    end
+  )
 end
 
 -- Apply on startup (only if not already set by user config)
 if not vim.g.colors_name then
-  M.load(get_gnome_theme())
+  local cached = read_cached_theme()
+  if cached then
+    M.load(cached)
+  else
+    local theme = get_gnome_theme_sync()
+    M.load(theme)
+    write_cached_theme(theme)
+  end
+  -- Self-correct asynchronously in case the cache is stale (system theme
+  -- changed since Neovim was last opened).
+  refresh_theme_from_gnome()
 end
 
--- Register the auto-update
-vim.api.nvim_create_autocmd({ "FocusGained", "BufEnter" }, {
+-- Register the auto-update: FocusGained only (a system theme change is a
+-- focus-worthy event, not a per-buffer-switch one), async, debounced so
+-- rapid focus toggling doesn't spam subprocess spawns.
+local last_check_ms = 0
+local MIN_CHECK_INTERVAL_MS = 2000
+
+vim.api.nvim_create_autocmd("FocusGained", {
   group = vim.api.nvim_create_augroup("NightfoxGnomeSync", { clear = true }),
-  callback = apply_theme_by_gnome,
+  callback = function()
+    local now = vim.uv.now()
+    if now - last_check_ms < MIN_CHECK_INTERVAL_MS then
+      return
+    end
+    last_check_ms = now
+    refresh_theme_from_gnome()
+  end,
 })
+
+-- Push-based sync
+local sigwinch = vim.uv.new_signal()
+if sigwinch then
+  sigwinch:start("sigwinch", vim.schedule_wrap(refresh_theme_from_gnome))
+end
 
 return M
