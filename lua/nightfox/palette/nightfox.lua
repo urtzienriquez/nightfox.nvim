@@ -96,10 +96,10 @@ local function generate_spec(pal)
   }
 
   spec.diff = {
-    add = C.blend_hex(spec.bg1, pal.green.dim, 0.15),
-    delete = C.blend_hex(spec.bg1, pal.red.dim, 0.15),
-    change = C.blend_hex(spec.bg1, pal.blue.dim, 0.15),
-    text = C.blend_hex(spec.bg1, pal.cyan.dim, 0.2),
+    add = C.blend_hex(spec.bg1, pal.green.base, 0.35),
+    delete = C.blend_hex(spec.bg1, pal.red.base, 0.35),
+    change = C.blend_hex(spec.bg1, pal.blue.base, 0.35),
+    text = C.blend_hex(spec.bg1, pal.cyan.base, 0.55),
   }
 
   spec.git = {
