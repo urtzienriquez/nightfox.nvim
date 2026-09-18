@@ -86,9 +86,13 @@ function M._setup_once()
       parent, tail = "", name
     else
       local help = vim.bo.buftype == "help"
-      local fname = vim.fn.fnamemodify(name, ":~:.")
+      -- Directory buffers (dirvish, ...) end with "/"; fnamemodify(":~:.")
+      -- collapses that to "" when the dir is exactly cwd, so strip it
+      -- first -- a no-op for ordinary files, which never end in "/".
+      local path = name:gsub("/$", "")
+      local fname = vim.fn.fnamemodify(path, ":~:.")
       parent = help and "" or (fname:match("^(.*/)") or "")
-      tail = vim.fn.fnamemodify(name, ":t")
+      tail = vim.fn.fnamemodify(path, ":t")
     end
 
     local parent_hl, tail_hl, reset
