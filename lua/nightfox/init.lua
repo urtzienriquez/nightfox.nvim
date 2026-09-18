@@ -16,6 +16,13 @@ function M.setup(opts)
   if opts then
     M.config = vim.tbl_deep_extend("force", M.config, opts)
   end
+  -- The module auto-loads a theme on require (see bottom of this file),
+  -- which runs before this setup() call ever gets a chance to change
+  -- M.config. Re-apply now so setup()'s options aren't silently ignored
+  -- for the first paint of the session.
+  if vim.g.colors_name then
+    M.load(vim.g.colors_name)
+  end
 end
 
 function M.load(name)
@@ -67,6 +74,12 @@ function M.load(name)
 
   if M.config.statusline ~= false then
     require("nightfox.statusline").apply(spec)
+  else
+    -- Undo a prior load that had the statusline enabled (e.g. the
+    -- module's own auto-load at require-time, which always runs with
+    -- statusline=true before setup() can disable it) -- otherwise
+    -- 'statusline' stays wired up from that earlier call forever.
+    vim.o.statusline = ""
   end
 
   vim.api.nvim_create_autocmd("LspAttach", {
