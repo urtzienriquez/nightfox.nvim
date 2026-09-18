@@ -114,19 +114,34 @@ function M.apply(spec)
     if path == "" then
       return "[No Name]"
     end
+    if path:match("^%w+://") then
+      -- Virtual buffer name (fugitive://, guh://, term://, ...), not a real
+      -- filesystem path: fnamemodify(':p') normalizes/absolutizes as if it
+      -- were one and corrupts it. Show it as-is, and never collapse it to
+      -- just the tail -- that's what native %f/%F do too (see mini.statusline's
+      -- section_filename), and it's the only way to still tell two such
+      -- buffers apart (e.g. the two sides of a narrow :Gdiffsplit) once the
+      -- window is too narrow for the "full path" branch below.
+      return path
+    end
     if is_truncated(140) then
       return vim.fn.fnamemodify(path, ":t")
     end
     return vim.fn.fnamemodify(path, ":p:~")
   end
 
-  -- Unfocused window: just the filename, nothing else.
+  -- Unfocused window: full path (matches mini.statusline's inactive
+  -- content, which is just "%F%=" -- full path, never truncated to tail),
+  -- nothing else shown.
   function _G.st_filepath_minimal()
     local path = vim.api.nvim_buf_get_name(0)
     if path == "" then
       return "[No Name]"
     end
-    return vim.fn.fnamemodify(path, ":t")
+    if path:match("^%w+://") then
+      return path
+    end
+    return vim.fn.fnamemodify(path, ":p:~")
   end
 
   -- --------------------------
@@ -180,6 +195,21 @@ function M.apply(spec)
     end
   end
 
+  -- fugitive:// and gitsigns:// buffer names embed the gitdir directly
+  -- ("scheme:///<gitdir>//<sha-or-index>/<relpath>"). This is the exact
+  -- carve-out gitsigns.nvim itself uses (gitsigns/attach.lua, parse_git_path)
+  -- to still show git info for these even though their buftype is
+  -- non-normal (fugitive uses buftype=nowrite) -- and, since it's scheme-
+  -- specific, why a buffer from some other plugin (e.g. guh://) does not
+  -- get the same treatment there, or here.
+  local function scheme_git_dir(path)
+    local proto, gitdir = path:match("^(%a+)://(.-)//")
+    if (proto == "fugitive" or proto == "gitsigns") and gitdir and gitdir ~= "" then
+      return gitdir
+    end
+    return nil
+  end
+
   local function read_branch(gitdir)
     local f = io.open(gitdir .. "/HEAD", "r")
     if not f then
@@ -220,22 +250,29 @@ function M.apply(spec)
   end
 
   local function refresh_git_for_buf(bufnr)
-    -- Same rule gitsigns/mini.git use to decide whether to attach at all:
-    -- skip any non-normal buffer (fugitive's object buffers are
-    -- buftype=nowrite, dirvish listings are buftype=nofile, quickfix/help/
-    -- terminal are their own types, etc.) rather than naming any of them.
-    -- That's also why mini.statusline itself shows no git info there: the
-    -- buffer-local var it reads is simply never set for such buffers.
-    if vim.bo[bufnr].buftype ~= "" then
-      git_dir_cache[bufnr] = false
-      return
-    end
     local path = vim.api.nvim_buf_get_name(bufnr)
     if path == "" then
       git_dir_cache[bufnr] = false
       return
     end
-    local gitdir = find_git_dir(path)
+
+    -- fugitive:// / gitsigns:// carve-out first, regardless of buftype.
+    local gitdir = scheme_git_dir(path)
+
+    if not gitdir then
+      -- Same rule gitsigns/mini.git use to decide whether to attach at all
+      -- for anything else: skip any non-normal buffer (dirvish listings are
+      -- buftype=nofile, quickfix/help/terminal are their own types, etc.)
+      -- rather than naming any of them. That's also why mini.statusline
+      -- itself shows no git info there: the buffer-local var it reads is
+      -- simply never set for such buffers.
+      if vim.bo[bufnr].buftype ~= "" then
+        git_dir_cache[bufnr] = false
+        return
+      end
+      gitdir = find_git_dir(path)
+    end
+
     git_dir_cache[bufnr] = gitdir or false
     if gitdir then
       if branch_cache[gitdir] == nil then
@@ -258,6 +295,10 @@ function M.apply(spec)
   local branch_icon = "\u{f418}"
 
   function _G.st_branch()
+    if is_truncated(75) then
+      return ""
+    end
+    local bufnr = vim.api.nvim_get_current_buf()
     -- Re-check buftype here too (not just in refresh_git_for_buf's cache):
     -- plugins like dirvish set buftype from a FileType autocmd, which runs
     -- *after* BufEnter, so a buffer can still look "normal" (buftype=="")
@@ -265,10 +306,12 @@ function M.apply(spec)
     -- afterwards. Checking live here (cheap: one option read) is what
     -- actually matches mini.statusline's effective behavior, since it always
     -- reads current buffer-local state, never a BufEnter-time snapshot.
-    if is_truncated(75) or vim.bo.buftype ~= "" then
+    -- fugitive/gitsigns buffers are the one exception (buftype=nowrite but
+    -- we still want the branch, see scheme_git_dir()).
+    if vim.bo.buftype ~= "" and not scheme_git_dir(vim.api.nvim_buf_get_name(bufnr)) then
       return ""
     end
-    local gitdir = git_dir_cache[vim.api.nvim_get_current_buf()]
+    local gitdir = git_dir_cache[bufnr]
     local branch = gitdir and branch_cache[gitdir]
     return (branch and branch ~= "") and (" " .. branch_icon .. " " .. branch .. " ") or ""
   end
