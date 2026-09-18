@@ -32,7 +32,6 @@ end
 
 local function setup_highlights(spec)
   local palette = spec.palette
-  vim.api.nvim_set_hl(0, "SLModified", { fg = palette.red.base, bold = true })
   vim.api.nvim_set_hl(0, "SLFileNameParent", { fg = palette.blue.base, bold = true })
   vim.api.nvim_set_hl(0, "SLFileNameTail", { fg = spec.fg1, bold = true })
   vim.api.nvim_set_hl(0, "SLEncoding", { fg = spec.bg0, bg = palette.yellow.base })
@@ -96,9 +95,7 @@ function M._setup_once()
     end
 
     local parent_hl, tail_hl, reset
-    if vim.bo.modified then
-      parent_hl, tail_hl, reset = "%#SLModified#", "%#SLModified#", "%*"
-    elseif fancy then
+    if fancy then
       parent_hl, tail_hl, reset = "%#SLFileNameParent#", "%#SLFileNameTail#", "%*"
     else
       -- No highlight opened, so no reset either -- "%*" would cancel the
