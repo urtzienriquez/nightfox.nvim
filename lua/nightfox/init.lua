@@ -16,10 +16,8 @@ function M.setup(opts)
   if opts then
     M.config = vim.tbl_deep_extend("force", M.config, opts)
   end
-  -- The module auto-loads a theme on require (see bottom of this file),
-  -- which runs before this setup() call ever gets a chance to change
-  -- M.config. Re-apply now so setup()'s options aren't silently ignored
-  -- for the first paint of the session.
+  -- Module auto-loads a theme on require, before setup() can change
+  -- M.config; re-apply now so options aren't ignored for the first paint.
   if vim.g.colors_name then
     M.load(vim.g.colors_name)
   end
@@ -40,7 +38,6 @@ function M.load(name)
   local spec = raw.generate_spec(palette)
   spec.palette = palette
 
-  -- Clear existing highlights
   if vim.g.colors_name then
     vim.cmd("hi clear")
   end
@@ -75,10 +72,9 @@ function M.load(name)
   if M.config.statusline ~= false then
     require("nightfox.statusline").apply(spec)
   else
-    -- Undo a prior load that had the statusline enabled (e.g. the
-    -- module's own auto-load at require-time, which always runs with
-    -- statusline=true before setup() can disable it) -- otherwise
-    -- 'statusline' stays wired up from that earlier call forever.
+    -- Undo a prior load where the statusline was enabled (e.g. the
+    -- module's own auto-load, which always runs before setup() can
+    -- disable it).
     vim.o.statusline = ""
   end
 
@@ -93,9 +89,8 @@ function M.load(name)
   })
 end
 
--- GNOME dark/light auto-detection, with a state-file cache so startup never
--- has to block on a subprocess spawn: the cached theme applies instantly,
--- then an async check corrects it in the rare case it's stale.
+-- GNOME dark/light auto-detection. Cached theme applies instantly on
+-- startup; an async check corrects it if stale.
 local state_file = vim.fn.stdpath("state") .. "/nightfox_theme"
 
 local function read_cached_theme()
@@ -117,7 +112,7 @@ local function write_cached_theme(name)
   end
 end
 
--- Synchronous fallback: only used on the very first run, before any cache exists.
+-- Only used on the very first run, before any cache exists.
 local function get_gnome_theme_sync()
   local handle = io.popen("gsettings get org.gnome.desktop.interface color-scheme")
   local output = handle and handle:read("*a") or ""
@@ -127,8 +122,7 @@ local function get_gnome_theme_sync()
   return output:find("dark") and "nightfox" or "dayfox"
 end
 
--- Async check: reloads + refreshes the cache only if the real theme differs
--- from what's currently applied. Never blocks the main loop.
+-- Reloads only if the real theme differs from what's applied.
 local function refresh_theme_from_gnome()
   vim.system(
     { "gsettings", "get", "org.gnome.desktop.interface", "color-scheme" },
@@ -148,7 +142,7 @@ local function refresh_theme_from_gnome()
   )
 end
 
--- Apply on startup (only if not already set by user config)
+-- Apply on startup, unless already set by user config.
 if not vim.g.colors_name then
   local cached = read_cached_theme()
   if cached then
@@ -158,14 +152,11 @@ if not vim.g.colors_name then
     M.load(theme)
     write_cached_theme(theme)
   end
-  -- Self-correct asynchronously in case the cache is stale (system theme
-  -- changed since Neovim was last opened).
   refresh_theme_from_gnome()
 end
 
--- Register the auto-update: FocusGained only (a system theme change is a
--- focus-worthy event, not a per-buffer-switch one), async, debounced so
--- rapid focus toggling doesn't spam subprocess spawns.
+-- FocusGained only, debounced, so rapid focus toggling doesn't spam
+-- subprocess spawns.
 local last_check_ms = 0
 local MIN_CHECK_INTERVAL_MS = 2000
 
