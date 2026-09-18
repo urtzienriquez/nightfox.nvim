@@ -47,7 +47,7 @@ local function setup_highlights(spec)
   vim.api.nvim_set_hl(0, "SLFileType", { bold = true })
   vim.api.nvim_set_hl(0, "StatusLineMinimal", { bg = spec.bg1, fg = spec.bg1 })
   vim.api.nvim_set_hl(0, "StatusLine", { bg = spec.bg0, fg = spec.fg3 })
-  vim.api.nvim_set_hl(0, "StatusLineNC", { bg = spec.bg0, fg = spec.fg3 })
+  vim.api.nvim_set_hl(0, "StatusLineNC", { bg = spec.bg2, fg = spec.fg3 })
   -- vim.api.nvim_set_hl(0, "SLMacro", { fg = palette.cyan.base })
   -- vim.api.nvim_set_hl(0, "SLMode", { fg = spec.bg0, bg = palette.blue.base, bold = true })
 end
@@ -374,7 +374,6 @@ function M.apply(spec)
   -- --------------------------
   -- Global statusline string
   -- --------------------------
-  vim.o.laststatus = 3
   vim.o.statusline = table.concat({
     -- "%#SLMode#%{v:lua.st_mode()}%* ",
     "%#SLFileName# %t %m%* ",
