@@ -36,20 +36,18 @@ end
 
 local function setup_highlights(spec)
   local palette = spec.palette
-  vim.api.nvim_set_hl(0, "SLFileName", { fg = palette.blue.base })
-  vim.api.nvim_set_hl(0, "SLGitAdd", { fg = palette.green.base })
-  vim.api.nvim_set_hl(0, "SLGitDelete", { fg = palette.red.base })
-  vim.api.nvim_set_hl(0, "SLGitBranch", { fg = palette.magenta.base })
+  -- vim.api.nvim_set_hl(0, "SLFileName", { fg = palette.blue.base })
+  vim.api.nvim_set_hl(0, "SLGitBranch", { fg = palette.blue.base })
   vim.api.nvim_set_hl(0, "SLDiagError", { fg = palette.red.base })
   vim.api.nvim_set_hl(0, "SLDiagWarn", { fg = palette.yellow.base })
   vim.api.nvim_set_hl(0, "SLDiagInfo", { fg = palette.cyan.base })
   vim.api.nvim_set_hl(0, "SLDiagHint", { fg = palette.green.base })
   vim.api.nvim_set_hl(0, "SLFileType", { bold = true })
   vim.api.nvim_set_hl(0, "StatusLineMinimal", { bg = spec.bg1, fg = spec.bg1 })
-  vim.api.nvim_set_hl(0, "StatusLine", { bg = spec.bg0, fg = spec.fg3 })
-  vim.api.nvim_set_hl(0, "StatusLineNC", { bg = spec.bg2, fg = spec.fg3 })
+  -- vim.api.nvim_set_hl(0, "StatusLine", { bg = spec.bg0, fg = spec.fg3 })
+  -- vim.api.nvim_set_hl(0, "StatusLineNC", { bg = spec.bg2, fg = spec.fg3 })
   -- vim.api.nvim_set_hl(0, "SLMacro", { fg = palette.cyan.base })
-  -- vim.api.nvim_set_hl(0, "SLMode", { fg = spec.bg0, bg = palette.blue.base, bold = true })
+  vim.api.nvim_set_hl(0, "SLMode", { fg = spec.bg0, bg = palette.blue.base, bold = true })
 end
 
 -- Call this once from nightfox/init.lua, passing the resolved spec.
@@ -69,8 +67,218 @@ function M.apply(spec)
   _G._nightfox_statusline_loaded = true
 
   -- --------------------------
-  -- Icon highlight cache
+  -- Width-based truncation
   -- --------------------------
+  -- Mirrors mini.statusline's MiniStatusline.is_truncated(): while a
+  -- statusline %{} expression is evaluated, Neovim temporarily makes the
+  -- window/buffer it is drawn for the "current" one (see :h stl-%{), so a
+  -- plain nvim_win_get_width(0)/nvim_get_current_buf() already refers to
+  -- the right window/buffer without any extra bookkeeping.
+  local function is_truncated(trunc_width)
+    local w = vim.o.laststatus == 3 and vim.o.columns or vim.api.nvim_win_get_width(0)
+    return w < trunc_width
+  end
+
+  -- --------------------------
+  -- Mode
+  -- --------------------------
+  -- Show whatever vim.fn.mode() emits directly ("n", "i", "v", "V", ...),
+  -- no lookup table translating it into a name.
+  function _G.st_mode()
+    return "  " .. vim.fn.mode() .. " "
+  end
+
+  -- --------------------------
+  -- Focus detection
+  -- --------------------------
+  -- g:actual_curwin is set natively by Neovim for exactly this purpose (see
+  -- :h g:actual_curwin): it holds the window-ID of the *real* current
+  -- window, distinct from the one currently being drawn.
+  local function is_focused_win()
+    return vim.o.laststatus == 3 or vim.api.nvim_get_current_win() == tonumber(vim.g.actual_curwin or -1)
+  end
+
+  -- --------------------------
+  -- File path
+  -- --------------------------
+  -- Mirrors mini.statusline's section_filename(): plain tail for terminal
+  -- buffers, short form (tail) when truncated, full path otherwise. Unlike
+  -- mini we tilde-collapse $HOME in the full form, and %m%r (appended in
+  -- the statusline string itself) cover the modified/readonly flags.
+  function _G.st_filepath()
+    if vim.bo.buftype == "terminal" then
+      return vim.fn.fnamemodify(vim.api.nvim_buf_get_name(0), ":t")
+    end
+
+    local path = vim.api.nvim_buf_get_name(0)
+    if path == "" then
+      return "[No Name]"
+    end
+    if is_truncated(140) then
+      return vim.fn.fnamemodify(path, ":t")
+    end
+    return vim.fn.fnamemodify(path, ":p:~")
+  end
+
+  -- Unfocused window: just the filename, nothing else.
+  function _G.st_filepath_minimal()
+    local path = vim.api.nvim_buf_get_name(0)
+    if path == "" then
+      return "[No Name]"
+    end
+    return vim.fn.fnamemodify(path, ":t")
+  end
+
+  -- --------------------------
+  -- Macro recording
+  -- --------------------------
+  -- function _G.st_macro()
+  --   local reg = vim.fn.reg_recording()
+  --   return reg ~= "" and ("  recording @" .. reg .. " ") or ""
+  -- end
+
+  -- --------------------------
+  -- Git branch
+  -- --------------------------
+  -- No subprocess spawning at all: find the repo's .git dir with plain
+  -- fs_stat calls, read HEAD directly (same file gitsigns/mini.git read),
+  -- and watch it with libuv so we only re-read on an actual branch change
+  -- instead of on every redraw.
+  local git_dir_cache = {} -- bufnr -> gitdir path, or false if none
+  local branch_cache = {} -- gitdir -> branch (or short hash) string
+  local watchers = {} -- gitdir -> uv_fs_event handle
+
+  local function find_git_dir(path)
+    local dir = vim.fn.fnamemodify(path, ":p:h")
+    while true do
+      local git_path = dir .. "/.git"
+      local stat = vim.uv.fs_stat(git_path)
+      if stat and stat.type == "directory" then
+        return git_path
+      elseif stat and stat.type == "file" then
+        -- Worktree/submodule: ".git" is a file containing "gitdir: <path>".
+        local f = io.open(git_path, "r")
+        local gitdir
+        if f then
+          local content = f:read("*l")
+          f:close()
+          gitdir = content and content:match("^gitdir:%s*(.+)$")
+        end
+        if not gitdir then
+          return nil
+        end
+        if not gitdir:match("^/") then
+          gitdir = dir .. "/" .. gitdir
+        end
+        return (vim.fn.fnamemodify(gitdir, ":p"):gsub("/$", ""))
+      end
+      local parent = vim.fn.fnamemodify(dir, ":h")
+      if parent == dir then
+        return nil
+      end
+      dir = parent
+    end
+  end
+
+  local function read_branch(gitdir)
+    local f = io.open(gitdir .. "/HEAD", "r")
+    if not f then
+      return ""
+    end
+    local content = f:read("*l")
+    f:close()
+    if not content then
+      return ""
+    end
+    return content:match("^ref:%s*refs/heads/(.+)$") or content:sub(1, 7)
+  end
+
+  local function watch_branch(gitdir)
+    if watchers[gitdir] then
+      return
+    end
+    local handle = vim.uv.new_fs_event()
+    if not handle then
+      return
+    end
+    watchers[gitdir] = handle
+    -- Watch the *directory*, not the HEAD file itself: git updates HEAD by
+    -- writing a lockfile and renaming it over HEAD, which replaces the
+    -- inode. A watch on the file path stops firing after that first rename;
+    -- watching the directory (and filtering by filename) survives it.
+    handle:start(
+      gitdir,
+      {},
+      vim.schedule_wrap(function(err, filename)
+        if err or (filename ~= nil and filename ~= "HEAD") then
+          return
+        end
+        branch_cache[gitdir] = read_branch(gitdir)
+        vim.cmd("redrawstatus")
+      end)
+    )
+  end
+
+  local function refresh_git_for_buf(bufnr)
+    -- Same rule gitsigns/mini.git use to decide whether to attach at all:
+    -- skip any non-normal buffer (fugitive's object buffers are
+    -- buftype=nowrite, dirvish listings are buftype=nofile, quickfix/help/
+    -- terminal are their own types, etc.) rather than naming any of them.
+    -- That's also why mini.statusline itself shows no git info there: the
+    -- buffer-local var it reads is simply never set for such buffers.
+    if vim.bo[bufnr].buftype ~= "" then
+      git_dir_cache[bufnr] = false
+      return
+    end
+    local path = vim.api.nvim_buf_get_name(bufnr)
+    if path == "" then
+      git_dir_cache[bufnr] = false
+      return
+    end
+    local gitdir = find_git_dir(path)
+    git_dir_cache[bufnr] = gitdir or false
+    if gitdir then
+      if branch_cache[gitdir] == nil then
+        branch_cache[gitdir] = read_branch(gitdir)
+      end
+      watch_branch(gitdir)
+    end
+  end
+
+  vim.api.nvim_create_autocmd("BufEnter", {
+    group = vim.api.nvim_create_augroup("NightfoxStatuslineGit", { clear = true }),
+    callback = function(a)
+      refresh_git_for_buf(a.buf)
+    end,
+  })
+  refresh_git_for_buf(vim.api.nvim_get_current_buf())
+
+  -- Hardcoded (not looked up via devicons) so it always shows, even
+  -- without an icon-font plugin installed. U+F418 = nf-oct-git_branch.
+  local branch_icon = "\u{f418}"
+
+  function _G.st_branch()
+    -- Re-check buftype here too (not just in refresh_git_for_buf's cache):
+    -- plugins like dirvish set buftype from a FileType autocmd, which runs
+    -- *after* BufEnter, so a buffer can still look "normal" (buftype=="")
+    -- at the moment we cache it on BufEnter, and only become nofile/nowrite
+    -- afterwards. Checking live here (cheap: one option read) is what
+    -- actually matches mini.statusline's effective behavior, since it always
+    -- reads current buffer-local state, never a BufEnter-time snapshot.
+    if is_truncated(75) or vim.bo.buftype ~= "" then
+      return ""
+    end
+    local gitdir = git_dir_cache[vim.api.nvim_get_current_buf()]
+    local branch = gitdir and branch_cache[gitdir]
+    return (branch and branch ~= "") and (" " .. branch_icon .. " " .. branch .. " ") or ""
+  end
+
+  -- --------------------------
+  -- Filetype + devicons icon
+  -- --------------------------
+  -- Resolved once (not on every redraw); icon_hl_cache holds the per-color
+  -- highlight groups devicons hands back, also created lazily.
+  local devicons_ok, devicons = pcall(require, "nvim-web-devicons")
   local icon_hl_cache = {}
 
   vim.api.nvim_create_autocmd("ColorScheme", {
@@ -86,161 +294,12 @@ function M.apply(spec)
     end,
   })
 
-  -- --------------------------
-  -- Mode
-  -- --------------------------
-  -- local block = vim.api.nvim_replace_termcodes("<C-v>", true, false, true)
-  -- local sblock = vim.api.nvim_replace_termcodes("<C-s>", true, false, true)
-  --
-  -- local mode_map = {
-  --   ["n"] = " NORMAL",
-  --   ["no"] = " O-PEND",
-  --   ["v"] = " VISUAL",
-  --   ["V"] = " V-LINE",
-  --   [block] = " V-BLOCK",
-  --   ["s"] = " SELECT",
-  --   ["S"] = " S-LINE",
-  --   [sblock] = " S-BLOCK",
-  --   ["i"] = " INSERT",
-  --   ["ic"] = " INSERT",
-  --   ["R"] = " REPLACE",
-  --   ["Rv"] = " V-REPL",
-  --   ["c"] = " COMMAND",
-  --   ["t"] = " TERM",
-  --   ["nt"] = " N-TERM",
-  -- }
-  --
-  -- function _G.st_mode()
-  --   return " " .. (mode_map[vim.fn.mode()] or vim.fn.mode()) .. " "
-  -- end
-
-  -- --------------------------
-  -- Macro recording
-  -- --------------------------
-  -- function _G.st_macro()
-  --   local reg = vim.fn.reg_recording()
-  --   return reg ~= "" and ("  recording @" .. reg .. " ") or ""
-  -- end
-
-  -- --------------------------
-  -- Async git status
-  -- --------------------------
-  local git_cache = {}
-  local pending = {}
-  local timers = {}
-  local root_cache = {}
-
-  local function get_git_root(bufnr)
-    if root_cache[bufnr] then
-      return root_cache[bufnr]
-    end
-    local path = vim.api.nvim_buf_get_name(bufnr)
-    if path == "" then
-      return nil
-    end
-    local dir = vim.fn.fnamemodify(path, ":p:h")
-    local h = io.popen(("git -C %s rev-parse --show-toplevel 2>/dev/null"):format(vim.fn.shellescape(dir)))
-    if not h then
-      return nil
-    end
-    local root = h:read("*l")
-    h:close()
-    root_cache[bufnr] = (root and root ~= "") and root or nil
-    return root_cache[bufnr]
-  end
-
-  local function update_git_async(bufnr)
-    bufnr = bufnr or vim.api.nvim_get_current_buf()
-    if not vim.api.nvim_buf_is_valid(bufnr) or vim.bo[bufnr].buftype ~= "" then
-      return
-    end
-    if pending[bufnr] then
-      return
-    end
-    pending[bufnr] = true
-
-    local root = get_git_root(bufnr)
-    if not root then
-      git_cache[bufnr] = { branch = "", added = 0, removed = 0 }
-      pending[bufnr] = nil
-      return
-    end
-
-    local cmd = (
-      "cd %s 2>/dev/null && { git rev-parse --abbrev-ref HEAD 2>/dev/null; echo '---'; "
-      .. "git diff --numstat HEAD 2>/dev/null; echo '---'; git status --porcelain 2>/dev/null; }"
-    ):format(vim.fn.shellescape(root))
-
-    vim.fn.jobstart(cmd, {
-      stdout_buffered = true,
-      on_stdout = function(_, data)
-        if not data or not vim.api.nvim_buf_is_valid(bufnr) then
-          pending[bufnr] = nil
-          return
-        end
-        local parts = vim.split(table.concat(data, "\n"), "---", { plain = true })
-        local branch = (parts[1] or ""):match("^%s*(.-)%s*$")
-        local added, removed = 0, 0
-        if parts[2] then
-          for line in parts[2]:gmatch("[^\r\n]+") do
-            local a, d = line:match("^(%d+)%s+(%d+)")
-            if a then
-              added = added + tonumber(a)
-              removed = removed + tonumber(d)
-            end
-          end
-        end
-        if not (parts[3] and parts[3]:match("%S")) then
-          added = 0
-          removed = 0
-        end
-        git_cache[bufnr] = { branch = branch, added = added, removed = removed }
-        pending[bufnr] = nil
-        vim.schedule(function()
-          vim.cmd("redrawstatus")
-        end)
-      end,
-      on_exit = function()
-        pending[bufnr] = nil
-      end,
-    })
-  end
-
-  local function update_debounced(bufnr, delay)
-    delay = delay or 100
-    if timers[bufnr] then
-      timers[bufnr]:stop()
-    end
-    timers[bufnr] = vim.defer_fn(function()
-      update_git_async(bufnr)
-      timers[bufnr] = nil
-    end, delay)
-  end
-
-  function _G.st_branch()
-    local g = git_cache[vim.api.nvim_get_current_buf()]
-    return (g and g.branch ~= "") and (" " .. g.branch .. " ") or ""
-  end
-  function _G.st_added()
-    local g = git_cache[vim.api.nvim_get_current_buf()]
-    return (g and g.added > 0) and ("+" .. g.added .. " ") or ""
-  end
-  function _G.st_removed()
-    local g = git_cache[vim.api.nvim_get_current_buf()]
-    return (g and g.removed > 0) and ("-" .. g.removed .. "  ") or ""
-  end
-
-  -- --------------------------
-  -- Filetype + devicons
-  -- --------------------------
   function _G.st_filetype_text()
     local filetype = vim.bo.filetype
     if filetype == "" then
       return ""
     end
-
-    local ok, devicons = pcall(require, "nvim-web-devicons")
-    if not ok then
+    if not devicons_ok then
       return filetype
     end
 
@@ -270,26 +329,33 @@ function M.apply(spec)
   -- --------------------------
   -- Diagnostics
   -- --------------------------
-  local sev = vim.diagnostic.severity
-  local function dc(s)
-    return #vim.diagnostic.get(0, { severity = s })
-  end
-
   function _G.st_err()
-    local c = dc(sev.ERROR)
-    return c > 0 and (" " .. c .. " ") or ""
+    if is_truncated(75) then
+      return ""
+    end
+    local c = vim.diagnostic.count(0)[vim.diagnostic.severity.ERROR] or 0
+    return c > 0 and ("E" .. c .. " ") or ""
   end
   function _G.st_warn()
-    local c = dc(sev.WARN)
-    return c > 0 and (" " .. c .. " ") or ""
+    if is_truncated(75) then
+      return ""
+    end
+    local c = vim.diagnostic.count(0)[vim.diagnostic.severity.WARN] or 0
+    return c > 0 and ("W" .. c .. " ") or ""
   end
   function _G.st_info()
-    local c = dc(sev.INFO)
-    return c > 0 and ("󰋽 " .. c .. " ") or ""
+    if is_truncated(75) then
+      return ""
+    end
+    local c = vim.diagnostic.count(0)[vim.diagnostic.severity.INFO] or 0
+    return c > 0 and ("I" .. c .. " ") or ""
   end
   function _G.st_hint()
-    local c = dc(sev.HINT)
-    return c > 0 and (" " .. c .. " ") or ""
+    if is_truncated(75) then
+      return ""
+    end
+    local c = vim.diagnostic.count(0)[vim.diagnostic.severity.HINT] or 0
+    return c > 0 and ("H" .. c .. " ") or ""
   end
 
   -- --------------------------
@@ -311,44 +377,6 @@ function M.apply(spec)
   -- --------------------------
   local aug = vim.api.nvim_create_augroup("NightfoxStatusline", { clear = true })
 
-  vim.api.nvim_create_autocmd("BufEnter", {
-    group = aug,
-    callback = function(a)
-      update_debounced(a.buf, 100)
-    end,
-  })
-  vim.api.nvim_create_autocmd("BufWritePost", {
-    group = aug,
-    callback = function(a)
-      update_debounced(a.buf, 0)
-    end,
-  })
-  vim.api.nvim_create_autocmd("FocusGained", {
-    group = aug,
-    callback = function()
-      local b = vim.api.nvim_get_current_buf()
-      root_cache[b] = nil
-      update_debounced(b, 0)
-    end,
-  })
-  vim.api.nvim_create_autocmd("User", {
-    group = aug,
-    pattern = "FugitiveChanged",
-    callback = function()
-      root_cache = {}
-      for b in pairs(git_cache) do
-        update_debounced(b, 0)
-      end
-    end,
-  })
-  vim.api.nvim_create_autocmd("ShellCmdPost", {
-    group = aug,
-    callback = function()
-      local b = vim.api.nvim_get_current_buf()
-      root_cache[b] = nil
-      update_debounced(b, 0)
-    end,
-  })
   vim.api.nvim_create_autocmd({ "RecordingEnter", "RecordingLeave" }, {
     group = aug,
     callback = function()
@@ -366,30 +394,41 @@ function M.apply(spec)
   --   end,
   -- })
 
-  vim.api.nvim_create_user_command("GitStatusRefresh", function()
-    update_debounced(vim.api.nvim_get_current_buf(), 0)
-    vim.notify("Git status refreshed", vim.log.levels.INFO)
-  end, {})
-
   -- --------------------------
   -- Global statusline string
   -- --------------------------
-  vim.o.statusline = table.concat({
-    -- "%#SLMode#%{v:lua.st_mode()}%* ",
-    "%#SLFileName# %t %m%* ",
+  -- "%{%...%}" (NOT "%!") re-evaluates the returned string for further %
+  -- items, same as mini.statusline. This matters: a top-level "%!"
+  -- expression runs in the context of the *actual* current window/buffer,
+  -- while "%{}" (including "%{%...%}") runs in the context of the window
+  -- the statusline is being drawn for (:h stl-%{, :h stl-%!) -- which is
+  -- what g:actual_curwin needs to be meaningful below.
+  -- %m%r are native flags (modified/readonly), same as mini.statusline's
+  -- section_filename() uses them.
+  local full_statusline = table.concat({
+    "%#SLMode#%{v:lua.st_mode()}%* ",
     "%#SLGitBranch#%{v:lua.st_branch()}%*",
-    "%#SLGitAdd#%{v:lua.st_added()}%*",
-    "%#SLGitDelete#%{v:lua.st_removed()}%*",
     "%#SLDiagError#%{v:lua.st_err()}%*",
     "%#SLDiagWarn#%{v:lua.st_warn()}%*",
     "%#SLDiagInfo#%{v:lua.st_info()}%*",
     "%#SLDiagHint#%{v:lua.st_hint()}%*",
+    "%#SLFileName#%{v:lua.st_filepath()}%m%r%*",
     -- "%#SLMacro#%{v:lua.st_macro()}%*",
     "%=",
     "%{%v:lua.st_filetype_text()%} ",
     "%4{v:lua.st_position()} ",
-    "%5l:%-5c ",
+    "%#SLMode# %l:%c %*",
   })
+  local minimal_statusline = "%#SLFileName# %{v:lua.st_filepath_minimal()}%m%r%*"
+
+  function _G.st_statusline()
+    if is_focused_win() then
+      return full_statusline
+    end
+    return minimal_statusline
+  end
+
+  vim.o.statusline = "%{%v:lua.st_statusline()%}"
 end
 
 return M

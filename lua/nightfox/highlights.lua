@@ -74,7 +74,7 @@ function M.apply(spec, config)
   -- EDITOR › Statusline & tabline
   -- --------------------------------------------------------------------------
 
-  hi("StatusLine", { fg = spec.fg2, bg = spec.bg0 })
+  hi("StatusLine", { fg = spec.fg3, bg = spec.bg0 })
   hi("StatusLineNC", { fg = spec.fg3, bg = spec.bg0 })
   hi("TabLine", { fg = spec.fg2, bg = spec.bg2 })
   hi("TabLineFill", { bg = spec.bg0 })
