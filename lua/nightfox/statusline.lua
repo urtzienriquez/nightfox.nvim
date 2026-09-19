@@ -70,13 +70,14 @@ function M._setup_once()
     return vim.v.this_session ~= "" and " $" or ""
   end
 
-  -- Filename keeps its own colors even when unfocused: parent dims to
-  -- SLInactiveText, tail keeps SLFileNameTail (just not bold).
-  local function filepath_text(fancy)
+  -- Fancy (focused, non-terminal): blue parent + bright tail. Focused
+  -- terminal: same tail color, no blue accent (kept simple). Unfocused:
+  -- unstyled, relies on the outer SLInactiveText wrap in st_statusline().
+  local function filepath_text(fancy, is_focused)
     local bufnr = vim.api.nvim_get_current_buf()
     local raw = vim.api.nvim_buf_get_name(bufnr)
     -- "%" is a statusline metacharacter; escape any literal ones.
-    local name = raw == "" and "Untitled" or (raw:gsub("%%", "%%%%"))
+    local name = raw == "" and "[No Name]" or (raw:gsub("%%", "%%%%"))
 
     local parent, tail
     if raw:match("^%w+://") then
@@ -97,6 +98,8 @@ function M._setup_once()
     local parent_hl, tail_hl, reset
     if fancy then
       parent_hl, tail_hl, reset = "%#SLFileNameParent#", "%#SLFileNameTail#", "%*"
+    elseif is_focused then
+      parent_hl, tail_hl, reset = "%#SLFileNameTail#", "%#SLFileNameTail#", "%*"
     else
       -- No highlight opened, so no reset either -- "%*" would cancel the
       -- outer SLInactiveText wrap for the rest of the line.
@@ -348,12 +351,19 @@ function M._setup_once()
   -- further % items and runs in the drawn window's context, which is what
   -- makes g:actual_curwin meaningful in is_focused_win().
   function _G.st_statusline()
+    local is_focused = is_focused_win()
     local term = vim.bo.buftype == "terminal"
-    local fancy = is_focused_win() and not term
+    local fancy = is_focused and not term
+    -- Pure terminals (opened via :terminal, buffer name "term://...") keep
+    -- the full dimmed treatment even when focused. Other buftype=terminal
+    -- buffers (e.g. guh.nvim capturing command output under the hood) do
+    -- not -- see is_focused/fancy split above and `active` below.
+    local pure_terminal = vim.api.nvim_buf_get_name(0):match("^term://") ~= nil
+    local active = is_focused and not pure_terminal
 
     local left = table.concat({
       session_text(),
-      filepath_text(fancy),
+      filepath_text(fancy, active),
       "%h%w%m%r ",
       term and "%{v:lua.require('vim._core.util').term_exitcode()}" or "",
       "%=",
@@ -376,7 +386,7 @@ function M._setup_once()
       " %l:%c %P ",
     })
 
-    if fancy then
+    if active then
       return left .. right
     end
     return "%#SLInactiveText#" .. left .. right .. "%*"
