@@ -8,6 +8,7 @@ M.config = {
   transparent = false,
   terminal_colors = true,
   dim_inactive = false,
+  active_gutter = false, -- darker (bg0) gutter in the focused window
   code_block_bg = true, -- full-line bg tint on fenced code blocks
   statusline = true, -- set to false to disable the built-in statusline
 }

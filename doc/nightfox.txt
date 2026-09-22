@@ -79,6 +79,7 @@ All options are passed to |nightfox.setup()|. Defaults:
       transparent     = false,
       terminal_colors = true,
       dim_inactive    = false,
+      active_gutter   = false,
       code_block_bg   = true,
       statusline      = true,
       on_load         = nil,
@@ -106,6 +107,16 @@ dim_inactive ~
     background) sets the intensity.
 >lua
     require("nightfox").setup({ dim_inactive = 0.25 })
+<
+                                              *nightfox-options-active_gutter*
+active_gutter ~
+    (boolean, default: `false`)
+    Gives the gutter (line numbers, sign column, fold column) a darker
+    background (`spec.bg0`) in the focused window. Unfocused windows and
+    empty buffers keep the normal `spec.bg1` background. When disabled, the
+    gutter always uses `spec.bg1`.
+>lua
+    require("nightfox").setup({ active_gutter = true })
 <
                                               *nightfox-options-code_block_bg*
 code_block_bg ~

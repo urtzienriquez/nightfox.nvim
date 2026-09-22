@@ -17,6 +17,8 @@ function M.apply(spec, config)
   local syn = spec.syntax
   local trans = config and config.transparent or false
   local bg1 = trans and "NONE" or spec.bg1
+  local active_gutter = config and config.active_gutter or false
+  local gutter_bg = active_gutter and spec.bg0 or spec.bg1
 
   -- --------------------------------------------------------------------------
   -- EDITOR › Core
@@ -39,7 +41,7 @@ function M.apply(spec, config)
 
   hi("Cursor", { fg = spec.bg1, bg = spec.fg1 })
   hi("CursorLine", { bg = spec.bg3 })
-  hi("CursorLineNr", { bg = spec.bg0, fg = spec.diag.warn, bold = true })
+  hi("CursorLineNr", { bg = gutter_bg, fg = spec.diag.warn, bold = true })
   hi("CursorLineNrNC", { fg = spec.fg3, bold = true })
   hi("MsgArea", { fg = spec.fg1, bg = spec.bg1 })
   link("lCursor", "Cursor")
@@ -50,9 +52,9 @@ function M.apply(spec, config)
   -- EDITOR › Gutter (line numbers, signs, folds)
   -- --------------------------------------------------------------------------
 
-  hi("LineNr", { fg = spec.fg3, bg = spec.bg0 })
-  hi("SignColumn", { fg = spec.fg3, bg = spec.bg0 })
-  hi("FoldColumn", { fg = spec.fg3, bg = spec.bg0 })
+  hi("LineNr", { fg = spec.fg3, bg = gutter_bg })
+  hi("SignColumn", { fg = spec.fg3, bg = gutter_bg })
+  hi("FoldColumn", { fg = spec.fg3, bg = gutter_bg })
 
   hi("LineNrNC", { fg = spec.fg3, bg = spec.bg1 })
   hi("LineNrAboveNC", { fg = spec.fg3, bg = spec.bg1 })
@@ -498,19 +500,23 @@ function M.apply(spec, config)
   M.apply_rmd_refs(spec)
 
   -- --------------------------------------------------------------------------
-  -- AUTOCMDS › Gutter dimming (active bg0 → inactive bg1)
+  -- AUTOCMDS › Gutter dimming: the cursor line number always dims in
+  -- inactive windows; the bg swap (bg0 → bg1) is opt-in via
+  -- config.active_gutter
   -- --------------------------------------------------------------------------
 
   local rnvim_ft = { r = true, rmd = true, quarto = true }
 
-  local GUTTER_NC = table.concat({
-    "LineNr:LineNrNC",
-    "LineNrAbove:LineNrAboveNC",
-    "LineNrBelow:LineNrBelowNC",
-    "SignColumn:SignColumnNC",
-    "FoldColumn:FoldColumnNC",
-    "CursorLineNr:CursorLineNrNC",
-  }, ",")
+  local GUTTER_NC = active_gutter
+      and table.concat({
+        "LineNr:LineNrNC",
+        "LineNrAbove:LineNrAboveNC",
+        "LineNrBelow:LineNrBelowNC",
+        "SignColumn:SignColumnNC",
+        "FoldColumn:FoldColumnNC",
+        "CursorLineNr:CursorLineNrNC",
+      }, ",")
+    or "CursorLineNr:CursorLineNrNC"
 
   local function is_empty()
     if vim.bo.modified or vim.fn.bufname("%") ~= "" then

@@ -54,6 +54,7 @@ require("nightfox").setup({
     transparent     = false,  -- transparent background
     terminal_colors = true,   -- set vim.g.terminal_color_* variables
     dim_inactive    = false,  -- dim inactive windows (see below)
+    active_gutter   = false,  -- darker gutter in the focused window
     code_block_bg   = true,   -- tinted background on fenced code blocks in markdown/quarto/rmd
     statusline      = true,   -- built-in statusline (disabled if a statusline plugin is detected)
     on_load         = nil,    -- callback for highlight/palette overrides (see below)
@@ -90,6 +91,16 @@ require("nightfox").setup({ dim_inactive = true })
 
 -- custom factor (0 = no dimming, 1 = fully blended into background)
 require("nightfox").setup({ dim_inactive = 0.25 })
+```
+
+---
+
+### `active_gutter` (boolean, default: `false`)
+
+Gives the gutter (line numbers, sign column, fold column) a darker background (`spec.bg0`) in the focused window, so it's easier to see which window is active. Unfocused windows and empty buffers keep the normal `spec.bg1` background. When this is off, the gutter always uses `spec.bg1`.
+
+```lua
+require("nightfox").setup({ active_gutter = true })
 ```
 
 ---
