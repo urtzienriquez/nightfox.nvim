@@ -13,12 +13,14 @@ M.config = {
 }
 
 function M.setup(opts)
+  local prev = M.config
   if opts then
     M.config = vim.tbl_deep_extend("force", M.config, opts)
   end
   -- Module auto-loads a theme on require, before setup() can change
   -- M.config; re-apply now so options aren't ignored for the first paint.
-  if vim.g.colors_name then
+  -- Skip when nothing changed (e.g. bare setup()) to avoid a second load.
+  if vim.g.colors_name and not vim.deep_equal(prev, M.config) then
     M.load(vim.g.colors_name)
   end
 end
@@ -41,7 +43,7 @@ function M.load(name)
   if vim.g.colors_name then
     vim.cmd("hi clear")
   end
-  if vim.fn.exists("syntax_on") then
+  if vim.fn.exists("syntax_on") == 1 then
     vim.cmd("syntax reset")
   end
 
@@ -152,7 +154,9 @@ if not vim.g.colors_name then
     M.load(theme)
     write_cached_theme(theme)
   end
-  refresh_theme_from_gnome()
+  -- Deferred: spawning gsettings costs ~1ms, and the cached theme is
+  -- already applied, so this only needs to fix a stale cache.
+  vim.schedule(refresh_theme_from_gnome)
 end
 
 -- FocusGained only, debounced, so rapid focus toggling doesn't spam

@@ -11,23 +11,37 @@ This is just a minimal Lua-only Neovim colorscheme plugin with two themes:
 
 No compilation step, no extra foxes, no Vim compatibility layer.
 
+The theme follows the GNOME light/dark setting automatically. See [Automatic theme selection (GNOME)](#automatic-theme-selection-gnome).
+
+The same documentation is available inside Neovim with `:help nightfox`.
+
 ---
 
 ## Installation
 
-### lazy.nvim
+With the built-in plugin manager (`vim.pack`, Neovim 0.12+):
 
 ```lua
-{
-    "urtzienriquez/nightfox.nvim",
-    config = function()
-        require("nightfox").setup({
-            -- options go here (all optional)
-        })
-        vim.cmd.colorscheme("nightfox") -- or "dayfox"
-    end,
-}
+vim.pack.add({ "https://github.com/urtzienriquez/nightfox.nvim" })
+
+require("nightfox").setup({
+    -- options go here (all optional)
+})
 ```
+
+`require("nightfox")` applies a theme by itself (nightfox or dayfox, picked from GNOME), so there is no need to call `:colorscheme` afterwards. `setup()` only re-applies the theme when the options you pass actually change the config. Calling it again at runtime with new options updates the theme in place.
+
+---
+
+## Automatic theme selection (GNOME)
+
+On startup the theme is picked from GNOME's `org.gnome.desktop.interface color-scheme` setting: `nightfox` if it contains "dark", `dayfox` otherwise.
+
+- **Startup is instant**: the last detected theme is cached in `stdpath("state")/nightfox_theme` and applied right away. A `gsettings` check then runs asynchronously after startup and switches the theme if the cache was stale.
+- **First run**: with no cache yet, `gsettings` is queried synchronously once. If it is unavailable (non-GNOME desktops), this falls back to `dayfox`.
+- **Live sync**: GNOME is checked again when Neovim regains focus (`FocusGained`, at most every 2 seconds) and on every terminal resize (`SIGWINCH`). If the GNOME setting differs from the current theme, the theme is switched to match.
+
+As a consequence, a theme picked manually with `:colorscheme` is replaced by the GNOME one on the next check if the two differ. The sync cannot be disabled currently. When `gsettings` fails (e.g. not on GNOME), the checks do nothing and the manually picked theme stays.
 
 ---
 
@@ -68,7 +82,7 @@ require("nightfox").setup({ terminal_colors = false })
 
 ### `dim_inactive` (boolean | number, default: `false`)
 
-Dims the text in unfocused windows. Accepts either `true` (uses the default blend factor of `0.4`) or a number between `0` and `1` to control the intensity — lower values are more subtle, higher values are more aggressive.
+Dims the text in unfocused windows and gives them a slightly darker background (applied through `winhighlight` when leaving a window or when Neovim loses focus). Accepts either `true` (uses the default blend factor of `0.4`) or a number between `0` and `1` to control the intensity — lower values are more subtle, higher values are more aggressive.
 
 ```lua
 -- use default factor
@@ -82,7 +96,7 @@ require("nightfox").setup({ dim_inactive = 0.25 })
 
 ### `code_block_bg` (boolean, default: `true`)
 
-Applies a full-line tinted background (`spec.bg2`) to fenced code blocks in markdown, quarto, and rmd files. Uses extmarks so the background covers the entire line including empty lines and trailing whitespace.
+Applies a full-line tinted background (`spec.bg2`) to fenced code blocks in markdown, quarto, rmd, pandoc and rnoweb files. Uses extmarks so the background covers the entire line including empty lines and trailing whitespace.
 
 ```lua
 require("nightfox").setup({ code_block_bg = false })
@@ -92,7 +106,7 @@ require("nightfox").setup({ code_block_bg = false })
 
 ### `statusline` (boolean, default: `true`)
 
-Enables the built-in statusline. It is automatically suppressed if a known statusline plugin (lualine, heirline, feline, etc.) is detected in `package.loaded`, so setting this is only needed to explicitly opt out.
+Enables the built-in statusline. It is automatically suppressed if a known statusline plugin (lualine, heirline, feline, etc.) is detected in `package.loaded`. The check runs when the theme is applied, so the statusline plugin must be loaded before nightfox for the detection to work. Otherwise, set this to `false`.
 
 ```lua
 require("nightfox").setup({ statusline = false })
@@ -102,7 +116,7 @@ require("nightfox").setup({ statusline = false })
 
 ### `on_load` (function, default: `nil`)
 
-A callback fired after all highlights have been applied. Receives `spec` and `palette` as arguments, which gives you access to all theme colors for overriding individual highlight groups.
+A callback fired after the main highlight groups have been applied. It runs *before* the terminal colors, `dim_inactive`, code-block and statusline highlights are set, so overrides of those groups (e.g. `NightfoxCodeBlock`, `RNvimTitle`, `SL*`, `*Dim`) are overwritten. Receives `spec` and `palette` as arguments, which gives you access to all theme colors for overriding individual highlight groups.
 
 ```lua
 require("nightfox").setup({
@@ -135,7 +149,7 @@ The `on_load` callback receives two arguments:
 | `spec.fg0` | Brightest foreground |
 | `spec.fg1` | Main foreground (`Normal`) |
 | `spec.fg2` | Dimmer foreground (statusline text) |
-| `spec.fg3` | Muted foreground (line numbers, comments) |
+| `spec.fg3` | Muted foreground (line numbers, sign column, float borders) |
 | `spec.sel0` | Visual selection background |
 | `spec.sel1` | Active selection / pmenu selection |
 | `spec.syntax.comment` | Comment color |
@@ -152,16 +166,28 @@ The `on_load` callback receives two arguments:
 | `spec.syntax.builtin0` | Built-in functions |
 | `spec.syntax.builtin1` | Built-in types/modules |
 | `spec.syntax.builtin2` | Built-in constants |
+| `spec.syntax.builtin3` | Extra built-in color (not used by the default groups) |
 | `spec.syntax.preproc` | Preprocessor directives |
 | `spec.syntax.regex` | Regex color |
 | `spec.syntax.conditional` | Conditionals (if/else/etc.) |
+| `spec.syntax.statement` | Statement color (not used by the default groups) |
+| `spec.syntax.variable` | Variable color (not used by the default groups) |
+| `spec.syntax.dep` | Deprecated-symbol color (not used by the default groups) |
 | `spec.diag.error` | Diagnostic error color |
 | `spec.diag.warn` | Diagnostic warning color |
 | `spec.diag.info` | Diagnostic info color |
 | `spec.diag.hint` | Diagnostic hint color |
+| `spec.diag.ok` | Diagnostic ok color |
+| `spec.diag_bg.error` / `.warn` / `.info` / `.hint` / `.ok` | Tinted backgrounds for diagnostic virtual text |
+| `spec.diff.add` | Diff added-line background |
+| `spec.diff.delete` | Diff deleted-line background |
+| `spec.diff.change` | Diff changed-line background |
+| `spec.diff.text` | Diff changed-text background |
 | `spec.git.add` | Git added color |
 | `spec.git.removed` | Git removed color |
 | `spec.git.changed` | Git changed color |
+| `spec.git.conflict` | Git conflict color (not used by the default groups) |
+| `spec.git.ignored` | Git ignored color (not used by the default groups) |
 
 ### `palette` fields
 
@@ -173,7 +199,9 @@ palette.blue.bright  -- lighter variant
 palette.blue.dim     -- darker variant
 ```
 
-Available colors: `black`, `red`, `green`, `yellow`, `blue`, `magenta`, `cyan`, `white`, `orange`, `pink`.
+Available colors: `black`, `red`, `green`, `yellow`, `blue`, `pblue`, `magenta`, `cyan`, `ecyan`, `white`, `orange`, `pink`.
+
+The palette also has plain hex fields (no variants): `comment`, `bg0`–`bg4`, `fg0`–`fg3`, `sel0`, `sel1`.
 
 ---
 
@@ -217,6 +245,8 @@ Or from Lua:
 ```lua
 vim.cmd.colorscheme("dayfox")
 ```
+
+On GNOME, a manually selected theme only lasts until the next GNOME check (focus regained or terminal resized), which switches back to the theme matching the GNOME setting. See [Automatic theme selection (GNOME)](#automatic-theme-selection-gnome).
 
 To bind a toggle:
 

@@ -1,0 +1,254 @@
+*nightfox.txt*          Minimal nightfox/dayfox colorscheme for Neovim
+
+==============================================================================
+CONTENTS                                                   *nightfox-contents*
+
+  1. Introduction ............................... |nightfox-introduction|
+  2. Setup ...................................... |nightfox-setup|
+  3. Automatic theme selection (GNOME) .......... |nightfox-gnome|
+  4. Options .................................... |nightfox-options|
+  5. Highlight overrides ........................ |nightfox-on_load|
+  6. Spec fields ................................ |nightfox-spec|
+  7. Palette fields ............................. |nightfox-palette|
+  8. Switching themes ........................... |nightfox-switching|
+
+==============================================================================
+1. INTRODUCTION                                        *nightfox-introduction*
+
+A fork of EdenEast's nightfox.nvim
+(https://github.com/EdenEast/nightfox.nvim), reduced to a minimal Lua-only
+colorscheme with two themes:
+
+  nightfox    dark                                          *nightfox-theme*
+  dayfox      light                                           *dayfox-theme*
+
+There is no compilation step, no extra foxes and no Vim compatibility layer.
+
+LSP semantic tokens are disabled: on |LspAttach| the plugin clears
+`client.server_capabilities.semanticTokensProvider`, so colors come from
+treesitter only.
+
+==============================================================================
+2. SETUP                                                      *nightfox-setup*
+
+                                                            *nightfox.setup()*
+Install with the built-in plugin manager (|vim.pack|, Neovim 0.12+) and call
+`setup()`:
+>lua
+    vim.pack.add({ "https://github.com/urtzienriquez/nightfox.nvim" })
+
+    require("nightfox").setup({
+      -- options go here (all optional), see |nightfox-options|
+    })
+<
+`require("nightfox")` applies a theme by itself (nightfox or dayfox, picked
+from GNOME, see |nightfox-gnome|), so there is no need to call |:colorscheme|
+afterwards.
+
+`setup()` only re-applies the theme when the options passed actually change
+the config. Calling it again at runtime with new options updates the theme in
+place.
+
+==============================================================================
+3. AUTOMATIC THEME SELECTION (GNOME)                          *nightfox-gnome*
+
+On startup the theme is picked from GNOME's
+`org.gnome.desktop.interface color-scheme` setting: nightfox if it contains
+"dark", dayfox otherwise.
+
+- The last detected theme is cached in `stdpath("state")/nightfox_theme` and
+  applied right away. A `gsettings` check then runs asynchronously after
+  startup and switches the theme if the cache was stale.
+- On the first run, with no cache yet, `gsettings` is queried synchronously
+  once. If it is unavailable (non-GNOME desktops), this falls back to dayfox.
+- GNOME is checked again when Neovim regains focus (|FocusGained|, at most
+  every 2 seconds) and on every terminal resize (SIGWINCH). If the GNOME
+  setting differs from the current theme, the theme is switched to match.
+
+As a consequence, a theme picked manually with |:colorscheme| is replaced by
+the GNOME one on the next check if the two differ. The sync cannot be
+disabled currently. When `gsettings` fails (e.g. not on GNOME), the checks do
+nothing and the manually picked theme stays.
+
+==============================================================================
+4. OPTIONS                                                  *nightfox-options*
+
+All options are passed to |nightfox.setup()|. Defaults:
+>lua
+    require("nightfox").setup({
+      transparent     = false,
+      terminal_colors = true,
+      dim_inactive    = false,
+      code_block_bg   = true,
+      statusline      = true,
+      on_load         = nil,
+    })
+<
+                                                *nightfox-options-transparent*
+transparent ~
+    (boolean, default: `false`)
+    Removes the background from the main |hl-Normal| highlight group, letting
+    the terminal background show through.
+
+                                            *nightfox-options-terminal_colors*
+terminal_colors ~
+    (boolean, default: `true`)
+    Sets `g:terminal_color_0` through `g:terminal_color_15` to the palette
+    colors so embedded terminals match the theme.
+
+                                               *nightfox-options-dim_inactive*
+dim_inactive ~
+    (boolean | number, default: `false`)
+    Dims the text in unfocused windows and gives them a slightly darker
+    background (applied through 'winhighlight' when leaving a window or when
+    Neovim loses focus). `true` uses the default blend factor of `0.4`; a
+    number between `0` (no dimming) and `1` (fully blended into the
+    background) sets the intensity.
+>lua
+    require("nightfox").setup({ dim_inactive = 0.25 })
+<
+                                              *nightfox-options-code_block_bg*
+code_block_bg ~
+    (boolean, default: `true`)
+    Applies a full-line tinted background (`spec.bg2`) to fenced code blocks
+    in markdown, quarto, rmd, pandoc and rnoweb files. Uses extmarks, so the
+    background covers the entire line, including empty lines and trailing
+    whitespace.
+
+                                                 *nightfox-options-statusline*
+statusline ~
+    (boolean, default: `true`)
+    Enables the built-in statusline. It is automatically suppressed if a known
+    statusline plugin (lualine, heirline, feline, etc.) is found in
+    `package.loaded`. The check runs when the theme is applied, so the
+    statusline plugin must be loaded before nightfox for the detection to
+    work. Otherwise, set this to `false`.
+
+                                                    *nightfox-options-on_load*
+on_load ~
+    (function, default: `nil`)
+    Callback for highlight overrides, see |nightfox-on_load|.
+
+==============================================================================
+5. HIGHLIGHT OVERRIDES                                      *nightfox-on_load*
+
+`on_load(spec, palette)` is called after the main highlight groups have been
+applied. It runs before the terminal colors, |nightfox-options-dim_inactive|,
+code-block and statusline highlights are set, so overrides of those groups
+(e.g. `NightfoxCodeBlock`, `RNvimTitle`, `SL*`, `*Dim`) are overwritten.
+
+Arguments:
+- `spec`     the resolved color spec, see |nightfox-spec|
+- `palette`  the raw palette, see |nightfox-palette|
+
+Example:
+>lua
+    require("nightfox").setup({
+      on_load = function(spec, palette)
+        local hl = vim.api.nvim_set_hl
+        hl(0, "Comment", { fg = spec.syntax.comment, italic = true })
+        hl(0, "WinSeparator", { fg = palette.blue.base, bg = "none" })
+        hl(0, "@markup.strong", { bold = true })
+      end,
+    })
+<
+==============================================================================
+6. SPEC FIELDS                                                 *nightfox-spec*
+
+Backgrounds, foregrounds and selections:
+
+  `bg0`                  Darkest background (statusline, etc.)
+  `bg1`                  Main background (|hl-Normal|)
+  `bg2`                  Slightly lighter background (popups, code blocks)
+  `bg3`                  Cursor line background
+  `bg4`                  Subtle UI elements, borders
+  `fg0`                  Brightest foreground
+  `fg1`                  Main foreground (|hl-Normal|)
+  `fg2`                  Dimmer foreground (statusline text)
+  `fg3`                  Muted foreground (line numbers, sign column,
+                       float borders)
+  `sel0`                 Visual selection background
+  `sel1`                 Active selection / pmenu selection
+
+`spec.syntax`:
+
+  `comment`              Comments
+  `string`               Strings
+  `keyword`              Keywords
+  `func`                 Functions
+  `type`                 Types
+  `const`                Constants
+  `number`               Numbers
+  `operator`             Operators
+  `field`                Struct/object fields
+  `ident`                Identifiers
+  `bracket`              Brackets/delimiters
+  `builtin0`             Built-in functions
+  `builtin1`             Built-in types/modules
+  `builtin2`             Built-in constants
+  `preproc`              Preprocessor directives
+  `regex`                Regexes
+  `conditional`          Conditionals (if/else/etc.)
+  `builtin3`, `statement`, `variable`, `dep`
+                       Available, but not used by the default groups
+
+`spec.diag` and `spec.diag_bg`:
+
+  `diag.error`, `diag.warn`, `diag.info`, `diag.hint`, `diag.ok`
+                       Diagnostic colors
+  `diag_bg.error`, `diag_bg.warn`, `diag_bg.info`, `diag_bg.hint`,
+  `diag_bg.ok`           Tinted backgrounds for diagnostic virtual text
+
+`spec.diff`:
+
+  `add`                  Diff added-line background
+  `delete`               Diff deleted-line background
+  `change`               Diff changed-line background
+  `text`                 Diff changed-text background
+
+`spec.git`:
+
+  `add`                  Git added
+  `removed`              Git removed
+  `changed`              Git changed
+  `conflict`, `ignored`  Available, but not used by the default groups
+
+==============================================================================
+7. PALETTE FIELDS                                           *nightfox-palette*
+
+Each named color has three variants:
+>lua
+    palette.blue.base    -- the base color
+    palette.blue.bright  -- lighter variant
+    palette.blue.dim     -- darker variant
+<
+Named colors: `black`, `red`, `green`, `yellow`, `blue`, `pblue`, `magenta`,
+`cyan`, `ecyan`, `white`, `orange`, `pink`.
+
+Plain hex fields (no variants): `comment`, `bg0`-`bg4`, `fg0`-`fg3`, `sel0`,
+`sel1`.
+
+==============================================================================
+8. SWITCHING THEMES                                       *nightfox-switching*
+
+Both themes can be loaded at any time:
+>vim
+    :colorscheme nightfox
+    :colorscheme dayfox
+<
+On GNOME, a manually selected theme only lasts until the next GNOME check
+(focus regained or terminal resized), which switches back to the theme
+matching the GNOME setting. See |nightfox-gnome|.
+
+Toggle example:
+>lua
+    vim.keymap.set("n", "<leader>ub", function()
+      if vim.o.background == "dark" then
+        vim.cmd.colorscheme("dayfox")
+      else
+        vim.cmd.colorscheme("nightfox")
+      end
+    end, { desc = "Toggle background" })
+<
+
+ vim:tw=78:ts=8:ft=help:norl:
