@@ -1,6 +1,6 @@
 theme_color:{tags: background, value: 0x192330ff}
 theme_color:{tags: "alt background", value: 0x131a24ff}
-theme_color:{tags: "pop background", value: 0x3c5372ff}
+theme_color:{tags: "pop background", value: 0x535244ff}
 theme_color:{tags: "pop weak text", value: 0xc2c3c4ff}
 theme_color:{tags: "fresh background", value: 0x384d6aff}
 theme_color:{tags: "match background", value: 0x2f5660ff}
