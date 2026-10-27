@@ -1,0 +1,72 @@
+theme_color:{tags: background, value: 0x192330ff}
+theme_color:{tags: "alt background", value: 0x131a24ff}
+theme_color:{tags: "pop background", value: 0x3c5372ff}
+theme_color:{tags: "pop weak text", value: 0xc2c3c4ff}
+theme_color:{tags: "fresh background", value: 0x384d6aff}
+theme_color:{tags: "match background", value: 0x2f5660ff}
+theme_color:{tags: "menu_bar background", value: 0x131a24ff}
+theme_color:{tags: border, value: 0x39506dff}
+theme_color:{tags: text, value: 0xcdcecfff}
+theme_color:{tags: "weak text", value: 0x7f8fa5ff}
+theme_color:{tags: "good text", value: 0x81b29aff}
+theme_color:{tags: "neutral text", value: 0x719cd6ff}
+theme_color:{tags: "bad text", value: 0xd16983ff}
+theme_color:{tags: hover, value: 0xe4e4e5ff}
+theme_color:{tags: "focus overlay", value: 0x719cd618}
+theme_color:{tags: "focus border", value: 0x719cd6ff}
+theme_color:{tags: cursor, value: 0xcdcecfff}
+theme_color:{tags: selection, value: 0x719cd640}
+theme_color:{tags: "inactive background", value: 0x16}
+theme_color:{tags: drop_shadow, value: 0x0000007f}
+theme_color:{tags: "good_pop background", value: 0x3d5555ff}
+theme_color:{tags: "good_pop border", value: 0x6e9783ff}
+theme_color:{tags: "good_pop hover", value: 0x94bea9ff}
+theme_color:{tags: "good_pop weak text", value: 0xcdcecfff}
+theme_color:{tags: "bad_pop background", value: 0x573245ff}
+theme_color:{tags: "bad_pop hover", value: 0xd16983ff}
+theme_color:{tags: code_default, value: 0xcdcecfff}
+theme_color:{tags: code_symbol, value: 0x86abdcff}
+theme_color:{tags: code_type, value: 0xa2f9fdff}
+theme_color:{tags: code_local, value: 0xdfdfe0ff}
+theme_color:{tags: code_register, value: 0x719cd6ff}
+theme_color:{tags: code_keyword, value: 0xe4e4e5ff}
+theme_color:{tags: code_delimiter_or_operator, value: 0xaeafb0ff}
+theme_color:{tags: code_numeric, value: 0xdfdfe0ff}
+theme_color:{tags: code_numeric_alt_digit_group, value: 0xbebebeff}
+theme_color:{tags: code_string, value: 0x81b29aff}
+theme_color:{tags: code_meta, value: 0xdc8ed9ff}
+theme_color:{tags: code_comment, value: 0x738091ff}
+theme_color:{tags: line_info_0, value: 0x50433cff}
+theme_color:{tags: line_info_1, value: 0x4a4a41ff}
+theme_color:{tags: line_info_2, value: 0x33474bff}
+theme_color:{tags: line_info_3, value: 0x2f415aff}
+theme_color:{tags: line_info_4, value: 0x50433cff}
+theme_color:{tags: line_info_5, value: 0x4a4a41ff}
+theme_color:{tags: line_info_6, value: 0x33474bff}
+theme_color:{tags: line_info_7, value: 0x2f415aff}
+theme_color:{tags: thread_0, value: 0xdbc074ff}
+theme_color:{tags: thread_1, value: 0x63cdcfff}
+theme_color:{tags: thread_unwound, value: 0xaeafb0ff}
+theme_color:{tags: thread_error, value: 0xd16983ff}
+theme_color:{tags: breakpoint, value: 0xc94f6dff}
+theme_color:{tags: "floating background", value: 0x212e3ff5}
+theme_color:{tags: "floating background alt", value: 0x0000005f}
+theme_color:{tags: "floating background fresh", value: 0x384d6a80}
+theme_color:{tags: "floating border", value: 0x39506dff}
+theme_color:{tags: "floating scroll_bar background", value: 0x29394fff}
+theme_color:{tags: "floating scroll_bar border", value: 0x39506dff}
+theme_color:{tags: "scroll_bar background", value: 0x29394fff}
+theme_color:{tags: "scroll_bar border", value: 0x39506dff}
+theme_color:{tags: "implicit background", value: 0x00000000}
+theme_color:{tags: "implicit border", value: 0x00000000}
+theme_color:{tags: "hollow background", value: 0x00000000}
+theme_color:{tags: "hollow border", value: 0xffffff1f}
+theme_color:{tags: "tab background", value: 0x212e3fff}
+theme_color:{tags: "tab border", value: 0x719cd6ff}
+theme_color:{tags: "tab inactive background", value: 0}
+theme_color:{tags: "tab inactive border", value: 0x29394fff}
+theme_color:{tags: "tab inactive text", value: 0x7f8fa5ff}
+theme_color:{tags: "tab auto background", value: 0x413d62ff}
+theme_color:{tags: "tab auto inactive background", value: 0x413d6260}
+theme_color:{tags: "drop_site background", value: 0xffffff05}
+theme_color:{tags: "drop_site border", value: 0xffffff0f}
