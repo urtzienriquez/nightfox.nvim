@@ -13,7 +13,7 @@ theme_color:{tags: "neutral text", value: 0x719cd6ff}
 theme_color:{tags: "bad text", value: 0xd16983ff}
 theme_color:{tags: hover, value: 0xe4e4e5ff}
 theme_color:{tags: "focus overlay", value: 0x719cd618}
-theme_color:{tags: "focus border", value: 0x719cd6ff}
+theme_color:{tags: "focus border", value: 0xdbc074ff}
 theme_color:{tags: cursor, value: 0xcdcecfff}
 theme_color:{tags: selection, value: 0x719cd640}
 theme_color:{tags: "inactive background", value: 0x16}
