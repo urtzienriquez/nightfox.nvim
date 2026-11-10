@@ -95,11 +95,15 @@ local function generate_spec(pal)
     ok = C.blend_hex(spec.bg1, spec.diag.ok, 0.2),
   }
 
+  -- Diff backgrounds are hand-tuned rather than blended: blending the muted
+  -- palette into the blue-tinted bg washes out the hues (add looked teal-grey,
+  -- change matched sel1). These keep distinct, saturated hues with fg1 >= 4:1.
   spec.diff = {
-    add = C.blend_hex(spec.bg1, pal.green.base, 0.35),
-    delete = C.blend_hex(spec.bg1, pal.red.base, 0.35),
-    change = C.blend_hex(spec.bg1, pal.blue.base, 0.35),
-    text = C.blend_hex(spec.bg1, pal.cyan.base, 0.55),
+    add = "#24503a", -- saturated green
+    delete = "#5a2636", -- saturated maroon
+    delete_fg = "#e38a9e", -- light red filler, ~4.8:1 on `delete`
+    change = "#3a3f4c", -- neutral slate (distinct from sel0/sel1)
+    text = "#1d6a74", -- saturated teal, pops against `change`
   }
 
   spec.git = {

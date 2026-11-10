@@ -211,10 +211,12 @@ function M.apply(spec, config)
   -- DIFF › Buffer-level diff highlights
   -- --------------------------------------------------------------------------
 
-  hi("DiffAdd", { fg = spec.git.add, bg = spec.diff.add })
+  -- No fg on DiffAdd/DiffChange/DiffText so syntax colors stay visible.
+  hi("DiffAdd", { bg = spec.diff.add })
   hi("DiffChange", { bg = spec.diff.change })
-  hi("DiffDelete", { fg = spec.git.removed, bg = spec.diff.delete })
+  hi("DiffDelete", { fg = spec.diff.delete_fg, bg = spec.diff.delete, bold = true })
   hi("DiffText", { bg = spec.diff.text, bold = true })
+  link("DiffTextAdd", "DiffText")
 
   -- --------------------------------------------------------------------------
   -- DIFF › diff/patch filetype syntax

@@ -95,11 +95,14 @@ local function generate_spec(pal)
     ok = C.blend_hex(spec.bg1, spec.diag.ok, 0.3),
   }
 
+  -- Hand-tuned light tints (see nightfox.lua): clearly hued instead of greyish,
+  -- with fg1 >= 7:1 and `text` distinct from both `change` and sel1.
   spec.diff = {
-    add = C.blend_hex(spec.bg1, pal.green.base, 0.35),
-    delete = C.blend_hex(spec.bg1, pal.red.base, 0.35),
-    change = C.blend_hex(spec.bg1, pal.blue.base, 0.35),
-    text = C.blend_hex(spec.bg1, pal.cyan.base, 0.55),
+    add = "#c6e3c6", -- light green
+    delete = "#f0c0c4", -- light red
+    delete_fg = pal.red.base, -- ~4.5:1 on `delete`
+    change = "#dddaee", -- light lavender-grey
+    text = "#96d0d6", -- saturated light teal
   }
 
   spec.git = {
