@@ -699,6 +699,7 @@ local ENABLED_FT = {
   quarto = true,
   pandoc = true,
   rnoweb = true,
+  jnoweb = true,
 }
 
 local function get_open_fence(line)
@@ -740,8 +741,8 @@ local function redraw_code_blocks(bufnr)
 
   local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
 
-  -- Rnw code chunks: <<...>>= ... @
-  if ft == "rnoweb" then
+  -- Noweb code chunks (Rnw, jnw): <<...>>= ... @
+  if ft == "rnoweb" or ft == "jnoweb" then
     for i, line in ipairs(lines) do
       if line:match("^<<(.*)>>=%s*$") then
         local start_row = i - 1
